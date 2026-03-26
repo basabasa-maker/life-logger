@@ -18,7 +18,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 .hdr h1{font-size:17px;font-weight:700}
 .hdr-sub{font-size:12px;opacity:.8;margin-top:1px}
 .hdr-r{display:flex;align-items:center;gap:6px}
-.hdr-r .dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.5)}
+.hdr-r .dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.5);transition:.3s}
+.hdr-r .dot.syncing{background:#ff9500;animation:pulse .8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .hdr-r .dot.ok{background:#34c759}
 .hdr-btn{background:rgba(255,255,255,.2);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:17px;cursor:pointer}
 .date-nav{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px}
@@ -258,6 +260,7 @@ function init(){
   items=JSON.parse(localStorage.getItem(CK)||'null')||JSON.parse(JSON.stringify(DEFAULT_ITEMS));
   syncUrl=localStorage.getItem(UK)||'';
   goToday();
+  pullFromSheet();
 }
 
 function ds(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -516,8 +519,47 @@ function delItem(){
 }
 
 // --- Sync ---
-function syncToSheet(){if(!syncUrl)return;const ifr=document.createElement('iframe');ifr.name='sf_'+Date.now();ifr.style.display='none';document.body.appendChild(ifr);const fm=document.createElement('form');fm.method='POST';fm.action=syncUrl;fm.target=ifr.name;fm.style.display='none';const inp=document.createElement('textarea');inp.name='data';inp.value=JSON.stringify(allData);fm.appendChild(inp);document.body.appendChild(fm);fm.submit();setTimeout(()=>{try{document.body.removeChild(ifr)}catch(e){}try{document.body.removeChild(fm)}catch(e){}},4000)}
-function testSync(){if(!syncUrl){alert('URLを入力');return}toast('接続テスト中...')}
+function setSyncState(state){
+  const dot=document.getElementById('syncDot');
+  dot.classList.remove('ok','syncing');
+  if(state)dot.classList.add(state);
+}
+function pullFromSheet(){
+  if(!syncUrl){setSyncState('');return}
+  setSyncState('syncing');
+  const cbName='_llcb_'+Date.now();
+  const script=document.createElement('script');
+  let done=false;
+  window[cbName]=function(res){
+    done=true;
+    try{document.head.removeChild(script)}catch(e){}
+    delete window[cbName];
+    if(!res||!res.success){setSyncState('');return}
+    const remote=res.data||{};
+    let merged=false;
+    Object.keys(remote).forEach(date=>{
+      const r=remote[date],l=allData[date];
+      if(!l){allData[date]=r;merged=true}
+      else{
+        const rTime=r.savedAt?new Date(r.savedAt).getTime():0;
+        const lTime=l.savedAt?new Date(l.savedAt).getTime():0;
+        if(rTime>lTime){allData[date]=r;merged=true}
+      }
+    });
+    if(merged){
+      localStorage.setItem(SK,JSON.stringify(allData));
+      loadDay();renderInput();
+      toast('クラウドから復元しました');
+    }
+    setSyncState('ok');
+  };
+  script.src=syncUrl+'?callback='+cbName;
+  script.onerror=function(){done=true;setSyncState('');delete window[cbName]};
+  document.head.appendChild(script);
+  setTimeout(()=>{if(!done){setSyncState('');delete window[cbName];try{document.head.removeChild(script)}catch(e){}}},10000);
+}
+function syncToSheet(){if(!syncUrl)return;setSyncState('syncing');const ifr=document.createElement('iframe');ifr.name='sf_'+Date.now();ifr.style.display='none';document.body.appendChild(ifr);const fm=document.createElement('form');fm.method='POST';fm.action=syncUrl;fm.target=ifr.name;fm.style.display='none';const inp=document.createElement('textarea');inp.name='data';inp.value=JSON.stringify(allData);fm.appendChild(inp);document.body.appendChild(fm);fm.submit();setTimeout(()=>{try{document.body.removeChild(ifr)}catch(e){}try{document.body.removeChild(fm)}catch(e){}setSyncState('ok')},4000)}
+function testSync(){if(!syncUrl){alert('URLを入力');return}pullFromSheet()}
 function exportCSV(){
   const dates=Object.keys(allData).sort();if(!dates.length){alert('データなし');return}
   const numItems=items.filter(i=>i.type!=='checkbox');const chkItems=items.filter(i=>i.type==='checkbox');
