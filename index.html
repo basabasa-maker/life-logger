@@ -251,7 +251,7 @@ const DEFAULT_ITEMS=[
 ];
 
 let allData={},items=[],dayV={},curDS='',syncUrl='';
-let npField='',npBuf='',npDec=0;
+let npField='',npBuf='',npDec=0,npIsCum=false,npCumBase=0;
 let tpField='',tpBuf='';
 let edIdx=-1,edIcon='';
 
@@ -348,18 +348,24 @@ function calcSleep(){
 
 // --- Numpad ---
 function openNp(id,ttl,unit,dec){
-  npField=id;npDec=dec;npBuf=dayV[id]?String(dayV[id]):'';if(npBuf==='0')npBuf='';
-  document.getElementById('npTtl').textContent=ttl;
+  npField=id;npDec=dec;
+  var it=items.find(function(i){return i.id===id});
+  var isCum=it&&it.type==='cumulative';
+  npBuf='';
+  document.getElementById('npTtl').textContent=isCum?ttl+'（+加算）':ttl;
   document.getElementById('npU').textContent=unit;
-  document.getElementById('npVal').textContent=npBuf||'0';
+  var cur=dayV[id]?parseFloat(dayV[id]):0;
+  document.getElementById('npVal').textContent=isCum?'+0':'0';
+  if(!isCum&&dayV[id]){npBuf=String(dayV[id]);document.getElementById('npVal').textContent=npBuf}
   document.getElementById('npDot').style.display=dec?'':'none';
   document.getElementById('npBg').classList.add('open');
+  if(isCum){npIsCum=true;npCumBase=cur}else{npIsCum=false;npCumBase=0}
 }
 function closeNp(){document.getElementById('npBg').classList.remove('open')}
-function npIn(c){if(c==='.'&&npBuf.includes('.'))return;if(c==='.'&&!npBuf)npBuf='0';if(npDec&&npBuf.includes('.')&&npBuf.split('.')[1].length>=npDec)return;npBuf+=c;document.getElementById('npVal').textContent=npBuf}
-function npDel(){npBuf=npBuf.slice(0,-1);document.getElementById('npVal').textContent=npBuf||'0'}
-function npClr(){npBuf='';document.getElementById('npVal').textContent='0'}
-function npOk(){dayV[npField]=parseFloat(npBuf)||0;closeNp();renderInput();autoSave()}
+function npIn(c){if(c==='.'&&npBuf.includes('.'))return;if(c==='.'&&!npBuf)npBuf='0';if(npDec&&npBuf.includes('.')&&npBuf.split('.')[1].length>=npDec)return;npBuf+=c;document.getElementById('npVal').textContent=npIsCum?'+'+(npBuf||'0'):npBuf}
+function npDel(){npBuf=npBuf.slice(0,-1);document.getElementById('npVal').textContent=npIsCum?'+'+(npBuf||'0'):npBuf||'0'}
+function npClr(){npBuf='';document.getElementById('npVal').textContent=npIsCum?'+0':'0'}
+function npOk(){var v=parseFloat(npBuf)||0;var it=items.find(function(i){return i.id===npField});if(it&&it.type==='cumulative'&&v!==0){dayV[npField]=(parseFloat(dayV[npField])||0)+v}else{dayV[npField]=v}closeNp();renderInput();autoSave()}
 
 // --- Time numpad ---
 function openTp(id,ttl){
