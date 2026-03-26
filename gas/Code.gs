@@ -1,5 +1,5 @@
 /**
- * Life Logger - Google Apps Script 同期API
+ * 暮らしの記録 - Google Apps Script 同期API
  * GitHub Pages のアプリからデータを受け取り、Google Sheets に保存する
  *
  * セットアップ:

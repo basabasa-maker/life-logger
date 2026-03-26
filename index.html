@@ -4,13 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Life Logger</title>
+<title>暮らしの記録</title>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#7edbbe">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjN2VkYmJlIi8+PHRleHQgeD0iOTAiIHk9IjEwNSIgZm9udC1zaXplPSI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZiI+8J+TljwvdGV4dD48L3N2Zz4=">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{--bg:#f0faf7;--card:#fff;--pri:#2ec4a0;--pri-dk:#1fa88a;--pri-lt:#e6f9f3;--txt:#1c1c1e;--txt2:#8e8e93;--bdr:#d8efe8;--grn:#34c759;--red:#ff3b30;--org:#ff9500;--shadow:0 2px 12px rgba(46,196,160,.12);--r:14px}
+:root{--bg:#f2fbf8;--card:#fff;--pri:#7edbbe;--pri-dk:#4fc9a0;--pri-lt:#e8f8f2;--txt:#1c1c1e;--txt2:#8e8e93;--bdr:#d8f0e8;--grn:#34c759;--red:#ff3b30;--org:#ff9500;--shadow:0 2px 12px rgba(126,219,190,.15);--r:14px}
 body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;background:var(--bg);color:var(--txt);-webkit-user-select:none;user-select:none}
 
-.hdr{background:linear-gradient(135deg,#2ec4a0,#1ab394);color:#fff;padding:14px 16px 16px;position:fixed;top:0;left:0;right:0;z-index:200}
+.hdr{background:linear-gradient(135deg,#7edbbe,#5ccfa8);color:#fff;padding:14px 16px 16px;position:fixed;top:0;left:0;right:0;z-index:200}
 .hdr-top{display:flex;justify-content:space-between;align-items:center}
 .hdr h1{font-size:17px;font-weight:700}
 .hdr-sub{font-size:12px;opacity:.8;margin-top:1px}
@@ -28,7 +31,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 .tab{flex:1;padding:11px 2px;text-align:center;font-size:11px;font-weight:600;color:var(--txt2);border:none;background:none;cursor:pointer;border-bottom:3px solid transparent}
 .tab.on{color:var(--pri);border-bottom-color:var(--pri)}
 
-.main{padding-top:136px;padding-bottom:76px}
+.main{padding-top:136px;padding-bottom:20px}
 .ct{max-width:600px;margin:0 auto;padding:12px}
 .sec{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden}
 .sec-h{padding:12px 14px 8px;font-size:12px;font-weight:700;color:var(--pri-dk);letter-spacing:.3px;display:flex;align-items:center;gap:6px}
@@ -63,9 +66,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
 .prog-bar{flex:1;height:8px;background:var(--bdr);border-radius:4px;overflow:hidden}
 .prog-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--grn),#30d158);transition:.3s}
 
-.save-bar{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--bdr);padding:10px 16px;z-index:200}
-.save-btn{width:100%;padding:14px;border:none;border-radius:14px;font-size:15px;font-weight:700;background:linear-gradient(135deg,#2ec4a0,#1ab394);color:#fff;cursor:pointer;font-family:inherit}
-.save-btn:active{transform:scale(.98)}
+.auto-saved{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#fff;padding:8px 20px;border-radius:20px;font-size:12px;font-weight:500;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+.auto-saved.show{opacity:1}
 
 /* Numpad */
 .np-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:none;align-items:flex-end;justify-content:center}
@@ -132,7 +134,7 @@ textarea.memo{width:100%;border:1px solid var(--bdr);border-radius:10px;padding:
 <body>
 <div class="hdr">
   <div class="hdr-top">
-    <div><h1>📊 Life Logger</h1><div class="hdr-sub" id="hdrDate"></div></div>
+    <div><h1>📊 暮らしの記録</h1><div class="hdr-sub" id="hdrDate"></div></div>
     <div class="hdr-r"><span class="dot" id="syncDot"></span><button class="hdr-btn" onclick="showV('st')">⚙</button></div>
   </div>
   <div class="date-nav">
@@ -156,7 +158,7 @@ textarea.memo{width:100%;border:1px solid var(--bdr);border-radius:10px;padding:
 <div class="vp" id="v-st"><div class="ct" id="settingsArea"></div></div>
 
 </div>
-<div class="save-bar"><button class="save-btn" onclick="save()">💾 保存する</button></div>
+<div class="auto-saved" id="autoSaved">自動保存しました ✓</div>
 
 <!-- Numpad -->
 <div class="np-bg" id="npBg" onclick="if(event.target===this)closeNp()">
@@ -309,7 +311,7 @@ function renderInput(){
   html+='</div></div>';
 
   // Memo
-  html+=`<div class="sec"><div class="sec-h">📝 メモ</div><div class="sec-b"><textarea class="memo" id="fMemo" rows="3" placeholder="今日の気づき...">${dayV.memo||''}</textarea></div></div>`;
+  html+=`<div class="sec"><div class="sec-h">📝 メモ</div><div class="sec-b"><textarea class="memo" id="fMemo" rows="3" placeholder="今日の気づき..." oninput="autoSave()">${dayV.memo||''}</textarea></div></div>`;
 
   document.getElementById('inputArea').innerHTML=html;
   calcSleep();
@@ -329,7 +331,7 @@ function togChk(id){
   dayV[id].done=!dayV[id].done;
   if(dayV[id].done){const n=new Date();dayV[id].time=n.getHours()+':'+String(n.getMinutes()).padStart(2,'0')}
   else dayV[id].time='';
-  renderInput();
+  renderInput();autoSave();
 }
 
 function calcSleep(){
@@ -354,7 +356,7 @@ function closeNp(){document.getElementById('npBg').classList.remove('open')}
 function npIn(c){if(c==='.'&&npBuf.includes('.'))return;if(c==='.'&&!npBuf)npBuf='0';if(npDec&&npBuf.includes('.')&&npBuf.split('.')[1].length>=npDec)return;npBuf+=c;document.getElementById('npVal').textContent=npBuf}
 function npDel(){npBuf=npBuf.slice(0,-1);document.getElementById('npVal').textContent=npBuf||'0'}
 function npClr(){npBuf='';document.getElementById('npVal').textContent='0'}
-function npOk(){dayV[npField]=parseFloat(npBuf)||0;closeNp();renderInput()}
+function npOk(){dayV[npField]=parseFloat(npBuf)||0;closeNp();renderInput();autoSave()}
 
 // --- Time numpad ---
 function openTp(id,ttl){
@@ -377,22 +379,32 @@ function updTpDisp(){
   document.getElementById('tpDisp').innerHTML=`<span>${p[0]}</span><span>${p[1]}</span><span class="colon">:</span><span>${p[2]}</span><span>${p[3]}</span>`;
 }
 function tpOk(){
-  if(!tpBuf){dayV[tpField]='';closeTp();renderInput();return}
+  if(!tpBuf){dayV[tpField]='';closeTp();renderInput();autoSave();return}
   const p=tpBuf.padStart(4,'0');
   let h=parseInt(p.substring(0,2)),m=parseInt(p.substring(2,4));
   if(h>23)h=23;if(m>59)m=m>=30?30:0;else m=m>=15?30:0;
   dayV[tpField]=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
-  closeTp();renderInput();
+  closeTp();renderInput();autoSave();
 }
 
-// --- Save ---
-function save(){
-  const memoEl=document.getElementById('fMemo');
-  if(memoEl)dayV.memo=memoEl.value;
-  dayV.date=curDS;dayV.savedAt=new Date().toISOString();
-  allData[curDS]={...dayV};
-  localStorage.setItem(SK,JSON.stringify(allData));
-  syncToSheet();toast('保存しました ✓');
+// --- Auto Save ---
+let _saveTimer=null,_toastTimer=null;
+function autoSave(){
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(()=>{
+    const memoEl=document.getElementById('fMemo');
+    if(memoEl)dayV.memo=memoEl.value;
+    dayV.date=curDS;dayV.savedAt=new Date().toISOString();
+    allData[curDS]={...dayV};
+    localStorage.setItem(SK,JSON.stringify(allData));
+    syncToSheet();showAutoSaved();
+  },400);
+}
+function showAutoSaved(){
+  const el=document.getElementById('autoSaved');
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>el.classList.remove('show'),1500);
 }
 function toast(m){const t=document.createElement('div');t.textContent=m;t.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.8);color:#fff;padding:14px 28px;border-radius:14px;font-size:15px;font-weight:600;z-index:999;pointer-events:none';document.body.appendChild(t);setTimeout(()=>{t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(()=>t.remove(),300)},1200)}
 
