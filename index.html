@@ -247,6 +247,7 @@ textarea.memo{width:100%;border:1px solid var(--bdr);border-radius:10px;padding:
 
 <script>
 const SK='life-logger-data',CK='life-logger-cfg',UK='life-logger-sync';
+const DEFAULT_SYNC='https://script.google.com/macros/s/AKfycbxja8XBaPrHOGsDEa8Y_Yzog-ZFb6U3R9eBe8wdjH5EnvEFTwhfUiGT3XBVd1DYX7Gi/exec';
 const ICONS=['🌙','☀️','💤','⏰','🍽','💧','⚖️','📏','🔥','👣','📱','📊','📈','📉','🎯','✅','🧘','📋','📧','📅','🤸','💊','🏠','💝','🏃','🚶','🧠','💪','❤️','🩺','🌡','💉','🍎','🥗','🍺','☕','📖','🎵','🎮','💰','🛒','📝','⭐','🔔','🕐','📸','🎨','🗂','🌿','🎓'];
 
 const DEFAULT_ITEMS=[
@@ -290,7 +291,8 @@ function init(){
   }else{
     items=JSON.parse(JSON.stringify(DEFAULT_ITEMS));
   }
-  syncUrl=localStorage.getItem(UK)||'';
+  syncUrl=localStorage.getItem(UK)||DEFAULT_SYNC;
+  if(!localStorage.getItem(UK)&&DEFAULT_SYNC){localStorage.setItem(UK,DEFAULT_SYNC)}
   goToday();
   pullFromSheet();
 }
