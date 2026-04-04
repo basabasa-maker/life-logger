@@ -43,6 +43,14 @@ function doPost(e) {
       throw new Error("データが空です");
     }
 
+    // ヘルスケアデータの場合は専用処理にルーティング
+    if (payload.source === "health") {
+      const result = mergeHealthData(payload);
+      return ContentService
+        .createTextOutput(JSON.stringify(result))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
     writeData(payload);
 
     return ContentService
@@ -145,4 +153,49 @@ function calcSleepHours(start, end) {
   let e = parseInt(end.split(":")[0]) * 60 + parseInt(end.split(":")[1]);
   if (e <= s) e += 1440;
   return ((e - s) / 60).toFixed(1);
+}
+
+/**
+ * Apple ヘルスケア連動 API
+ * iOSショートカットから体重・体脂肪・歩数・消費カロリーを受け取り、
+ * 当日のデータに自動マージする
+ *
+ * POST body (JSON):
+ *   { "source": "health", "date": "2026-04-04", "weight": 75.2, "bodyFat": 22.1, "steps": 8432, "calories": 520 }
+ *
+ * doPost() で source==="health" の場合にこの関数へルーティングする
+ */
+function mergeHealthData(payload) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) { setupSheet(); sheet = ss.getSheetByName(SHEET_NAME); }
+
+  const dateStr = payload.date || Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy-MM-dd");
+
+  // 既存データを読み込み
+  const allData = getData();
+  const existing = allData[dateStr] || {};
+
+  // ヘルスケアデータをマージ（値がある項目のみ上書き）
+  if (payload.weight !== undefined && payload.weight !== null) existing.weight = payload.weight;
+  if (payload.bodyFat !== undefined && payload.bodyFat !== null) existing.bodyFat = payload.bodyFat;
+  if (payload.steps !== undefined && payload.steps !== null) existing.steps = payload.steps;
+  if (payload.calories !== undefined && payload.calories !== null) existing.calories = payload.calories;
+
+  existing.date = dateStr;
+  existing.savedAt = new Date().toISOString();
+  allData[dateStr] = existing;
+
+  writeData(allData);
+
+  return {
+    success: true,
+    message: dateStr + " のヘルスケアデータを更新しました",
+    data: {
+      weight: existing.weight || null,
+      bodyFat: existing.bodyFat || null,
+      steps: existing.steps || null,
+      calories: existing.calories || null
+    }
+  };
 }
