@@ -143,6 +143,12 @@ textarea.memo{width:100%;border:1px solid var(--bdr);border-radius:10px;padding:
 .add-btn{display:flex;align-items:center;justify-content:center;padding:12px;color:var(--pri);font-size:14px;font-weight:600;cursor:pointer;gap:4px}
 .add-btn:active{opacity:.6}
 
+/* Sync warning banner */
+.sync-warn{background:#ff3b30;color:#fff;text-align:center;padding:8px 16px;font-size:12px;font-weight:600;position:fixed;top:88px;left:0;right:0;z-index:198;display:none}
+.sync-warn.show{display:block}
+.sync-warn+.tabs{top:112px}
+.sync-warn.show~.main{padding-top:160px}
+
 /* Confirm dialog */
 .confirm-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;display:none;align-items:center;justify-content:center}
 .confirm-bg.open{display:flex}
@@ -165,6 +171,7 @@ textarea.memo{width:100%;border:1px solid var(--bdr);border-radius:10px;padding:
     <button class="today" onclick="goToday()">今日</button>
   </div>
 </div>
+<div class="sync-warn" id="syncWarn">データ同期が未接続です。設定からSync URLを確認してください</div>
 <div class="tabs">
   <button class="tab on" id="t-in" onclick="showV('in')">入力</button>
   <button class="tab" id="t-ch" onclick="showV('ch')">グラフ</button>
@@ -294,6 +301,7 @@ function init(){
   syncUrl=localStorage.getItem(UK)||DEFAULT_SYNC;
   if(!localStorage.getItem(UK)&&DEFAULT_SYNC){localStorage.setItem(UK,DEFAULT_SYNC)}
   goToday();
+  checkSyncOnLoad();
   pullFromSheet();
 }
 
@@ -669,6 +677,13 @@ function setSyncState(state){
   var dot=document.getElementById('syncDot');
   dot.classList.remove('ok','syncing');
   if(state)dot.classList.add(state);
+  // Show/hide sync warning
+  var warn=document.getElementById('syncWarn');
+  if(state==='ok')warn.classList.remove('show');
+  else if(!syncUrl)warn.classList.add('show');
+}
+function checkSyncOnLoad(){
+  if(!syncUrl){document.getElementById('syncWarn').classList.add('show')}
 }
 function pullFromSheet(){
   if(!syncUrl){setSyncState('');return}
