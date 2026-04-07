@@ -2113,88 +2113,102 @@
           return;
         }
         setSyncState("syncing");
-        var cbName = "_llcb_" + Date.now();
-        var script = document.createElement("script");
-        var done = false;
-        window[cbName] = function (res) {
-          done = true;
-          try {
-            document.head.removeChild(script);
-          } catch (e) {}
-          delete window[cbName];
-          if (!res || !res.success) {
-            setSyncState("");
-            return;
-          }
-          var remote = res.data || {};
-          var merged = false;
-          Object.keys(remote).forEach(function (date) {
-            var r = remote[date],
-              l = allData[date];
-            if (!l) {
-              allData[date] = r;
-              merged = true;
-            } else {
-              var rTime = r.savedAt ? new Date(r.savedAt).getTime() : 0;
-              var lTime = l.savedAt ? new Date(l.savedAt).getTime() : 0;
-              if (rTime > lTime) {
+        fetch(syncUrl, { mode: "cors", redirect: "follow" })
+          .then(function (resp) {
+            return resp.json();
+          })
+          .then(function (res) {
+            if (!res || !res.success) {
+              setSyncState("");
+              toast("クラウドからの読み込みに失敗しました");
+              return;
+            }
+            var remote = res.data || {};
+            var merged = false;
+            Object.keys(remote).forEach(function (date) {
+              var r = remote[date],
+                l = allData[date];
+              if (!l) {
                 allData[date] = r;
                 merged = true;
+              } else {
+                var rTime = r.savedAt ? new Date(r.savedAt).getTime() : 0;
+                var lTime = l.savedAt ? new Date(l.savedAt).getTime() : 0;
+                if (rTime > lTime) {
+                  allData[date] = r;
+                  merged = true;
+                }
               }
+            });
+            if (merged) {
+              localStorage.setItem(SK, JSON.stringify(allData));
+              loadDay();
+              renderInput();
+              toast("クラウドから復元しました");
             }
-          });
-          if (merged) {
-            localStorage.setItem(SK, JSON.stringify(allData));
-            loadDay();
-            renderInput();
-            toast("クラウドから復元しました");
-          }
-          setSyncState("ok");
-        };
-        script.src = syncUrl + "?callback=" + cbName;
-        script.onerror = function () {
-          done = true;
-          setSyncState("");
-          delete window[cbName];
-        };
-        document.head.appendChild(script);
-        setTimeout(function () {
-          if (!done) {
+            setSyncState("ok");
+          })
+          .catch(function (err) {
+            console.error("Pull failed:", err);
             setSyncState("");
-            delete window[cbName];
-            try {
-              document.head.removeChild(script);
-            } catch (e) {}
-          }
-        }, 10000);
+            toast("クラウド接続エラー");
+          });
       }
-      function syncToSheet() {
+      function syncToSheet(retry) {
         if (!syncUrl) return;
         setSyncState("syncing");
-        var ifr = document.createElement("iframe");
-        ifr.name = "sf_" + Date.now();
-        ifr.style.display = "none";
-        document.body.appendChild(ifr);
-        var fm = document.createElement("form");
-        fm.method = "POST";
-        fm.action = syncUrl;
-        fm.target = ifr.name;
-        fm.style.display = "none";
-        var inp = document.createElement("textarea");
-        inp.name = "data";
-        inp.value = JSON.stringify(allData);
-        fm.appendChild(inp);
-        document.body.appendChild(fm);
-        fm.submit();
-        setTimeout(function () {
-          try {
-            document.body.removeChild(ifr);
-          } catch (e) {}
-          try {
-            document.body.removeChild(fm);
-          } catch (e) {}
-          setSyncState("ok");
-        }, 4000);
+        var retryCount = retry || 0;
+        fetch(syncUrl, {
+          method: "POST",
+          mode: "cors",
+          redirect: "follow",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify(allData),
+        })
+          .then(function (resp) {
+            return resp.text().then(function (text) {
+              try {
+                var json = JSON.parse(text);
+                if (json.success) {
+                  setSyncState("ok");
+                  return;
+                }
+              } catch (e) {}
+              // GAS redirect returns opaque/non-JSON but data is saved
+              // Verify by pulling back
+              verifySync();
+            });
+          })
+          .catch(function (err) {
+            console.error("Sync failed:", err);
+            if (retryCount < 2) {
+              setTimeout(function () {
+                syncToSheet(retryCount + 1);
+              }, 3000);
+            } else {
+              setSyncState("");
+              toast("同期失敗: データがクラウドに保存されていません");
+            }
+          });
+      }
+      function verifySync() {
+        // Pull data back from GAS to confirm it was actually saved
+        fetch(syncUrl, { mode: "cors", redirect: "follow" })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (res) {
+            if (res && res.success && res.count > 0) {
+              setSyncState("ok");
+            } else {
+              setSyncState("");
+              toast("同期確認失敗: データがクラウドにありません");
+            }
+          })
+          .catch(function () {
+            setSyncState("");
+            toast("同期確認失敗: 接続エラー");
+          });
       }
       function testSync() {
         if (!syncUrl) {
