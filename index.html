@@ -1,736 +1,2257 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<title>暮らしの記録</title>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#7edbbe">
-<link rel="apple-touch-icon" href="icon-180.png">
-<style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{--bg:#f2fbf8;--card:#fff;--pri:#7edbbe;--pri-dk:#4fc9a0;--pri-lt:#e8f8f2;--txt:#1c1c1e;--txt2:#8e8e93;--bdr:#d8f0e8;--grn:#34c759;--red:#ff3b30;--org:#ff9500;--shadow:0 2px 12px rgba(126,219,190,.15);--r:14px}
-body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;background:var(--bg);color:var(--txt);-webkit-user-select:none;user-select:none}
-
-.hdr{background:linear-gradient(135deg,#7edbbe,#5ccfa8);color:#fff;padding:14px 16px 16px;position:fixed;top:0;left:0;right:0;z-index:200}
-.hdr-top{display:flex;justify-content:space-between;align-items:center}
-.hdr h1{font-size:17px;font-weight:700}
-.hdr-sub{font-size:12px;opacity:.8;margin-top:1px}
-.hdr-r{display:flex;align-items:center;gap:6px}
-.hdr-r .dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.5);transition:.3s}
-.hdr-r .dot.syncing{background:#ff9500;animation:pulse .8s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.hdr-r .dot.ok{background:#34c759}
-.hdr-btn{background:rgba(255,255,255,.2);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:17px;cursor:pointer}
-.date-nav{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px}
-.date-nav button{background:rgba(255,255,255,.2);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer}
-.date-nav button:active{background:rgba(255,255,255,.4)}
-.date-nav .cur{font-size:16px;font-weight:600;min-width:140px;text-align:center}
-.date-nav .today{font-size:11px;padding:5px 12px;border-radius:12px;width:auto}
-
-.tabs{display:flex;background:var(--card);border-bottom:1px solid var(--bdr);position:fixed;top:88px;left:0;right:0;z-index:199}
-.tab{flex:1;padding:11px 2px;text-align:center;font-size:11px;font-weight:600;color:var(--txt2);border:none;background:none;cursor:pointer;border-bottom:3px solid transparent}
-.tab.on{color:var(--pri);border-bottom-color:var(--pri)}
-
-.main{padding-top:136px;padding-bottom:20px}
-.ct{max-width:600px;margin:0 auto;padding:12px}
-.sec{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden}
-.sec-h{padding:12px 14px 8px;font-size:12px;font-weight:700;color:var(--pri-dk);letter-spacing:.3px;display:flex;align-items:center;gap:6px;justify-content:space-between}
-.sec-b{padding:0 14px 12px}
-
-.row{display:flex;align-items:center;padding:11px 0;border-bottom:1px solid var(--bdr);min-height:46px;position:relative;transition:background .15s}
-.row:last-child{border-bottom:none}
-.row.dragging{opacity:.4;background:var(--pri-lt)}
-.row-icon{font-size:18px;margin-right:8px;flex-shrink:0}
-.row-lbl{flex:1;font-size:14px;font-weight:500}
-.row-val{padding:7px 12px;background:var(--pri-lt);border-radius:10px;min-width:80px;text-align:center;font-size:15px;font-weight:600;color:var(--pri-dk);cursor:pointer}
-.row-val:active{background:#cdf5ea}
-.row-val.empty{color:var(--txt2);font-weight:400;font-size:13px}
-.row-val .u{font-size:11px;font-weight:400;color:var(--txt2);margin-left:2px}
-
-.row-del{width:28px;height:28px;border-radius:50%;border:none;background:transparent;color:var(--txt2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:6px;flex-shrink:0;opacity:0;transition:opacity .2s}
-.edit-mode .row-del{opacity:1}
-.row-del:active{background:rgba(255,59,48,.1);color:var(--red)}
-
-.sleep-box{background:linear-gradient(135deg,var(--pri-lt),#d4f5ec);border-radius:12px;padding:12px;text-align:center;margin-bottom:8px}
-.sleep-val{font-size:28px;font-weight:700;color:var(--pri-dk)}
-.sleep-lbl{font-size:11px;color:var(--txt2);margin-top:2px}
-
-.chk-row{display:flex;align-items:center;padding:11px 0;border-bottom:1px solid var(--bdr);cursor:pointer;min-height:46px;position:relative;transition:background .15s}
-.chk-row:last-child{border-bottom:none}
-.chk-row:active{opacity:.7}
-.chk-row.dragging{opacity:.4;background:var(--pri-lt)}
-.chk{width:26px;height:26px;border-radius:50%;border:2.5px solid var(--bdr);margin-right:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.2s}
-.chk.on{background:var(--grn);border-color:var(--grn)}
-.chk.on::after{content:'\2713';color:#fff;font-size:14px;font-weight:700}
-.chk-icon{font-size:16px;margin-right:6px}
-.chk-lbl{flex:1;font-size:14px;font-weight:500}
-
-.auto-saved{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#fff;padding:8px 20px;border-radius:20px;font-size:12px;font-weight:500;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
-.auto-saved.show{opacity:1}
-
-/* Drag indicator */
-.drag-handle{width:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;margin-right:6px;flex-shrink:0;opacity:0;transition:opacity .2s;cursor:grab}
-.edit-mode .drag-handle{opacity:.5}
-.drag-handle span{display:block;width:14px;height:2px;background:var(--txt2);border-radius:1px}
-
-.drop-indicator{height:3px;background:var(--pri);border-radius:2px;margin:0 -14px;transition:opacity .15s;opacity:0}
-.drop-indicator.active{opacity:1}
-
-/* Edit mode toggle */
-.edit-toggle{font-size:12px;font-weight:600;color:var(--pri-dk);cursor:pointer;padding:4px 10px;border-radius:8px;background:var(--pri-lt);border:none}
-.edit-toggle:active{background:var(--bdr)}
-
-/* Numpad */
-.np-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:none;align-items:flex-end;justify-content:center}
-.np-bg.open{display:flex}
-.np-box{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:500px;padding:16px 14px 20px}
-.np-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.np-title{font-size:13px;font-weight:600;color:var(--txt2)}
-.np-x{background:none;border:none;font-size:18px;color:var(--txt2);cursor:pointer;padding:4px 8px}
-.np-disp{font-size:34px;font-weight:700;text-align:right;padding:10px 14px;background:var(--bg);border-radius:12px;margin-bottom:10px;min-height:56px;display:flex;align-items:center;justify-content:flex-end;gap:4px}
-.np-disp .np-u{font-size:15px;font-weight:400;color:var(--txt2)}
-.np-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.np-b{padding:14px;border:none;border-radius:10px;font-size:20px;font-weight:600;cursor:pointer;background:var(--bg);color:var(--txt);font-family:inherit}
-.np-b:active{background:var(--bdr)}
-.np-b.act{background:var(--pri-lt);color:var(--pri-dk)}
-.np-b.go{background:var(--pri);color:#fff}
-.np-b.go:active{background:var(--pri-dk)}
-.np-row2{display:flex;gap:6px;margin-top:8px}
-.np-row2 .np-b{flex:1;padding:13px;font-size:14px}
-
-/* Time numpad */
-.tp-disp{font-size:40px;font-weight:700;text-align:center;padding:12px;letter-spacing:4px}
-.tp-disp .colon{color:var(--txt2)}
-
-/* Views */
-.vp{display:none}.vp.on{display:block}
-.chart-c{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:14px;padding:14px}
-.chart-t{font-size:13px;font-weight:600;color:var(--pri-dk);margin-bottom:10px}
-.chart-s{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;font-size:11px;color:var(--txt2)}
-.chart-s span{font-weight:600;color:var(--txt)}
-.hist-row{display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid var(--bdr);cursor:pointer}
-.hist-row:active{background:var(--pri-lt)}
-.hist-d{font-size:13px;font-weight:600;width:65px;color:var(--pri-dk)}
-.hist-v{flex:1;font-size:12px;color:var(--txt2);line-height:1.5}
-.empty-m{text-align:center;padding:36px 16px;color:var(--txt2);font-size:13px}
-
-/* Settings */
-.s-field{padding:10px 0;border-bottom:1px solid var(--bdr)}.s-field:last-child{border-bottom:none}
-.s-field label{font-size:12px;font-weight:600;color:var(--txt2);display:block;margin-bottom:4px}
-.s-field input[type=text]{width:100%;padding:9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:inherit;background:var(--bg)}
-.s-btns{display:flex;gap:6px;margin-top:10px}
-.s-btns button{flex:1;padding:10px;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
-.b-pri{background:var(--pri);color:#fff}.b-sec{background:var(--bg);color:var(--txt)}
-
-/* Custom item editor */
-.editor-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:none;align-items:flex-end;justify-content:center}
-.editor-bg.open{display:flex}
-.editor{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:500px;padding:20px 16px 24px;max-height:85vh;overflow-y:auto}
-.ed-title{font-size:16px;font-weight:700;margin-bottom:16px}
-.ed-field{margin-bottom:14px}
-.ed-field label{font-size:12px;font-weight:600;color:var(--txt2);display:block;margin-bottom:4px}
-.ed-field input,.ed-field select{width:100%;padding:10px;border:1px solid var(--bdr);border-radius:8px;font-size:14px;font-family:inherit;background:var(--bg);-webkit-appearance:none}
-.icon-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
-.icon-opt{padding:6px;text-align:center;font-size:18px;border-radius:6px;cursor:pointer;border:2px solid transparent}
-.icon-opt:active,.icon-opt.sel{border-color:var(--pri);background:var(--pri-lt)}
-.ed-btns{display:flex;gap:8px;margin-top:16px}
-.ed-btns button{flex:1;padding:13px;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
-
-textarea.memo{width:100%;border:1px solid var(--bdr);border-radius:10px;padding:10px;font-size:14px;font-family:inherit;resize:vertical;background:var(--bg);min-height:70px;-webkit-user-select:text;user-select:text}
-
-.add-btn{display:flex;align-items:center;justify-content:center;padding:12px;color:var(--pri);font-size:14px;font-weight:600;cursor:pointer;gap:4px}
-.add-btn:active{opacity:.6}
-
-/* Sync warning banner */
-.sync-warn{background:#ff3b30;color:#fff;text-align:center;padding:8px 16px;font-size:12px;font-weight:600;position:fixed;top:88px;left:0;right:0;z-index:198;display:none}
-.sync-warn.show{display:block}
-.sync-warn+.tabs{top:112px}
-.sync-warn.show~.main{padding-top:160px}
-
-/* Confirm dialog */
-.confirm-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;display:none;align-items:center;justify-content:center}
-.confirm-bg.open{display:flex}
-.confirm-box{background:var(--card);border-radius:16px;padding:24px 20px;width:280px;text-align:center}
-.confirm-msg{font-size:15px;font-weight:600;margin-bottom:16px;line-height:1.5}
-.confirm-btns{display:flex;gap:8px}
-.confirm-btns button{flex:1;padding:12px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
-</style>
-</head>
-<body>
-<div class="hdr">
-  <div class="hdr-top">
-    <div><h1>暮らしの記録</h1><div class="hdr-sub" id="hdrDate"></div></div>
-    <div class="hdr-r"><span class="dot" id="syncDot"></span><button class="hdr-btn" onclick="showV('st')">&#9881;</button></div>
-  </div>
-  <div class="date-nav">
-    <button onclick="chgDate(-1)">&lsaquo;</button>
-    <div class="cur" id="curDate"></div>
-    <button onclick="chgDate(1)">&rsaquo;</button>
-    <button class="today" onclick="goToday()">今日</button>
-  </div>
-</div>
-<div class="sync-warn" id="syncWarn">データ同期が未接続です。設定からSync URLを確認してください</div>
-<div class="tabs">
-  <button class="tab on" id="t-in" onclick="showV('in')">入力</button>
-  <button class="tab" id="t-ch" onclick="showV('ch')">グラフ</button>
-  <button class="tab" id="t-hi" onclick="showV('hi')">履歴</button>
-  <button class="tab" id="t-st" onclick="showV('st')">設定</button>
-</div>
-<div class="main">
-
-<div class="vp on" id="v-in"><div class="ct" id="inputArea"></div></div>
-<div class="vp" id="v-ch"><div class="ct" id="chartArea"></div></div>
-<div class="vp" id="v-hi"><div class="ct"><div class="sec"><div class="sec-h">直近の記録</div><div id="histList"></div></div></div></div>
-<div class="vp" id="v-st"><div class="ct" id="settingsArea"></div></div>
-
-</div>
-<div class="auto-saved" id="autoSaved">自動保存しました</div>
-
-<!-- Numpad -->
-<div class="np-bg" id="npBg" onclick="if(event.target===this)closeNp()">
-<div class="np-box">
-  <div class="np-hdr"><div class="np-title" id="npTtl"></div><button class="np-x" onclick="closeNp()">&times;</button></div>
-  <div class="np-disp"><span id="npVal">0</span><span class="np-u" id="npU"></span></div>
-  <div class="np-grid">
-    <button class="np-b" onclick="npIn('7')">7</button><button class="np-b" onclick="npIn('8')">8</button><button class="np-b" onclick="npIn('9')">9</button>
-    <button class="np-b" onclick="npIn('4')">4</button><button class="np-b" onclick="npIn('5')">5</button><button class="np-b" onclick="npIn('6')">6</button>
-    <button class="np-b" onclick="npIn('1')">1</button><button class="np-b" onclick="npIn('2')">2</button><button class="np-b" onclick="npIn('3')">3</button>
-    <button class="np-b act" id="npDot" onclick="npIn('.')">.</button><button class="np-b" onclick="npIn('0')">0</button><button class="np-b act" onclick="npDel()">&#9003;</button>
-  </div>
-  <div class="np-row2"><button class="np-b act" onclick="npClr()">クリア</button><button class="np-b go" onclick="npOk()">決定</button></div>
-</div>
-</div>
-
-<!-- Time numpad -->
-<div class="np-bg" id="tpBg" onclick="if(event.target===this)closeTp()">
-<div class="np-box">
-  <div class="np-hdr"><div class="np-title" id="tpTtl"></div><button class="np-x" onclick="closeTp()">&times;</button></div>
-  <div class="tp-disp" id="tpDisp"><span>0</span><span>0</span><span class="colon">:</span><span>0</span><span>0</span></div>
-  <div class="np-grid">
-    <button class="np-b" onclick="tpIn('7')">7</button><button class="np-b" onclick="tpIn('8')">8</button><button class="np-b" onclick="tpIn('9')">9</button>
-    <button class="np-b" onclick="tpIn('4')">4</button><button class="np-b" onclick="tpIn('5')">5</button><button class="np-b" onclick="tpIn('6')">6</button>
-    <button class="np-b" onclick="tpIn('1')">1</button><button class="np-b" onclick="tpIn('2')">2</button><button class="np-b" onclick="tpIn('3')">3</button>
-    <button class="np-b act" onclick="tpIn('00')">00</button><button class="np-b" onclick="tpIn('0')">0</button><button class="np-b act" onclick="tpDel()">&#9003;</button>
-  </div>
-  <div class="np-row2"><button class="np-b act" onclick="tpClr()">クリア</button><button class="np-b go" onclick="tpOk()">決定</button></div>
-</div>
-</div>
-
-<!-- Item editor -->
-<div class="editor-bg" id="edBg" onclick="if(event.target===this)closeEd()">
-<div class="editor">
-  <div class="ed-title" id="edTitle">項目を追加</div>
-  <div class="ed-field"><label>アイコン</label><div class="icon-grid" id="iconGrid"></div></div>
-  <div class="ed-field"><label>項目名</label><input type="text" id="edName" placeholder="例：体温"></div>
-  <div class="ed-field"><label>入力方式</label>
-    <select id="edType">
-      <option value="integer">自然数（0, 1, 2, ...）</option>
-      <option value="decimal">小数点第1位（0.0）</option>
-      <option value="cumulative">累積値（増え続ける数値）</option>
-      <option value="checkbox">チェックボックス</option>
-      <option value="time">時刻（HH:MM）</option>
-    </select>
-  </div>
-  <div class="ed-field" id="edUnitField"><label>単位</label><input type="text" id="edUnit" placeholder="例：℃、歩、ml"></div>
-  <div class="ed-btns">
-    <button class="b-sec" onclick="closeEd()">キャンセル</button>
-    <button class="b-pri" onclick="saveItem()">保存</button>
-  </div>
-</div>
-</div>
-
-<!-- Confirm dialog -->
-<div class="confirm-bg" id="cfmBg">
-<div class="confirm-box">
-  <div class="confirm-msg" id="cfmMsg"></div>
-  <div class="confirm-btns">
-    <button class="b-sec" id="cfmNo">キャンセル</button>
-    <button style="background:var(--red);color:#fff" id="cfmYes">削除</button>
-  </div>
-</div>
-</div>
-
-<script>
-const SK='life-logger-data',CK='life-logger-cfg',UK='life-logger-sync';
-const DEFAULT_SYNC='https://script.google.com/macros/s/AKfycbxja8XBaPrHOGsDEa8Y_Yzog-ZFb6U3R9eBe8wdjH5EnvEFTwhfUiGT3XBVd1DYX7Gi/exec';
-const ICONS=['🌙','☀️','💤','⏰','🍽','💧','⚖️','📏','🔥','👣','📱','📊','📈','📉','🎯','✅','🧘','📋','📧','📅','🤸','💊','🏠','💝','🏃','🚶','🧠','💪','❤️','🩺','🌡','💉','🍎','🥗','🍺','☕','📖','🎵','🎮','💰','🛒','📝','⭐','🔔','🕐','📸','🎨','🗂','🌿','🎓'];
-
-const DEFAULT_ITEMS=[
-  {id:'sleepStart',label:'就寝時刻',icon:'🌙',type:'time',unit:''},
-  {id:'sleepEnd',label:'起床時刻',icon:'☀️',type:'time',unit:''},
-  {id:'nap',label:'パワーナップ',icon:'💤',type:'integer',unit:'分'},
-  {id:'lastMeal',label:'前日の最終食事',icon:'🍽',type:'time',unit:''},
-  {id:'water',label:'水分（無糖）',icon:'💧',type:'integer',unit:'ml'},
-  {id:'weight',label:'体重',icon:'⚖️',type:'decimal',unit:'kg'},
-  {id:'bodyFat',label:'体脂肪率',icon:'📏',type:'decimal',unit:'%'},
-  {id:'calories',label:'消費カロリー',icon:'🔥',type:'integer',unit:'kcal'},
-  {id:'meditation',label:'瞑想',icon:'🧘',type:'checkbox',unit:''},
-  {id:'taskCheck',label:'タスクチェック',icon:'📋',type:'checkbox',unit:''},
-  {id:'emailCheck',label:'メールチェック',icon:'📧',type:'checkbox',unit:''},
-  {id:'calendarCheck',label:'カレンダーチェック',icon:'📅',type:'checkbox',unit:''},
-  {id:'stretch',label:'朝のストレッチ',icon:'🤸',type:'checkbox',unit:''},
-  {id:'supplement',label:'サプリの服用',icon:'💊',type:'checkbox',unit:''},
-  {id:'housework',label:'家事',icon:'🏠',type:'checkbox',unit:''},
-  {id:'wifeContribution',label:'妙子に貢献すること',icon:'💝',type:'checkbox',unit:''},
-  {id:'steps',label:'歩数',icon:'👣',type:'integer',unit:'歩'},
-  {id:'tabelogFollowers',label:'食べログ フォロワー',icon:'⭐',type:'cumulative',unit:'人'},
-  {id:'tabelogReactions',label:'食べログ リアクション',icon:'📊',type:'cumulative',unit:'件'},
-  {id:'instaFollowers',label:'Instagram フォロワー',icon:'📸',type:'cumulative',unit:'人'},
-];
-
-let allData={},items=[],dayV={},curDS='',syncUrl='';
-let npField='',npBuf='',npDec=0,npIsCum=false,npCumBase=0;
-let tpField='',tpBuf='';
-let edIdx=-1,edIcon='';
-let editMode=false;
-
-// --- Drag state ---
-let dragIdx=-1,dragOverIdx=-1,dragEl=null,dragStartY=0,dragOffsetY=0;
-
-function init(){
-  allData=JSON.parse(localStorage.getItem(SK)||'{}');
-  const stored=JSON.parse(localStorage.getItem(CK)||'null');
-  if(stored){
-    // Migrate: remove cat property from old items
-    items=stored.map(function(it){var o={id:it.id,label:it.label,icon:it.icon,type:it.type,unit:it.unit||''};return o});
-  }else{
-    items=JSON.parse(JSON.stringify(DEFAULT_ITEMS));
-  }
-  syncUrl=localStorage.getItem(UK)||DEFAULT_SYNC;
-  if(!localStorage.getItem(UK)&&DEFAULT_SYNC){localStorage.setItem(UK,DEFAULT_SYNC)}
-  goToday();
-  checkSyncOnLoad();
-  pullFromSheet();
-}
-
-function ds(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-function pd(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2])}
-function goToday(){curDS=ds(new Date());updDate();loadDay();renderInput()}
-function chgDate(n){var d=pd(curDS);d.setDate(d.getDate()+n);curDS=ds(d);updDate();loadDay();renderInput()}
-function updDate(){
-  var d=pd(curDS),dw=['日','月','火','水','木','金','土'][d.getDay()];
-  document.getElementById('curDate').textContent=(d.getMonth()+1)+'月'+d.getDate()+'日（'+dw+'）';
-  document.getElementById('hdrDate').textContent=new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
-}
-
-function loadDay(){
-  var d=allData[curDS]||{};
-  dayV={memo:d.memo||''};
-  items.forEach(function(it){
-    if(it.type==='checkbox') dayV[it.id]={done:d[it.id]?d[it.id].done||false:false};
-    else dayV[it.id]=d[it.id]||'';
-  });
-}
-
-function renderInput(){
-  var html='';
-
-  // Sleep display
-  html+='<div class="sec"><div class="sec-b" style="padding-top:12px">';
-  html+='<div class="sleep-box"><div class="sleep-val" id="sleepDisp">--:--</div><div class="sleep-lbl">睡眠時間</div></div>';
-  html+='</div></div>';
-
-  // All items in one flat list
-  html+='<div class="sec'+(editMode?' edit-mode':'')+'"><div class="sec-h"><span>項目</span>';
-  html+='<button class="edit-toggle" onclick="toggleEdit()">'+(editMode?'完了':'編集')+'</button></div>';
-  html+='<div class="sec-b" id="itemList">';
-  items.forEach(function(it,i){
-    if(it.type==='checkbox'){
-      html+=renderChkRow(it,i);
-    }else{
-      html+=renderField(it,i);
-    }
-  });
-  html+='<div class="add-btn" onclick="openEd(-1)">＋ 項目を追加</div>';
-  html+='</div></div>';
-
-  // Memo
-  html+='<div class="sec"><div class="sec-h"><span>メモ</span></div><div class="sec-b"><textarea class="memo" id="fMemo" rows="3" placeholder="今日の気づき..." oninput="autoSave()">'+(dayV.memo||'')+'</textarea></div></div>';
-
-  document.getElementById('inputArea').innerHTML=html;
-  calcSleep();
-  if(editMode) initDrag();
-}
-
-function renderField(it,idx){
-  var v=dayV[it.id];
-  var disp='タップで入力',cls='empty';
-  if(it.type==='time'&&v){disp=v;cls=''}
-  else if(v&&v!==0&&v!==''){disp=v+(it.unit?'<span class="u">'+it.unit+'</span>':'');cls=''}
-  var onclick=it.type==='time'?"openTp('"+it.id+"','"+it.label+"')":"openNp('"+it.id+"','"+it.label+"','"+it.unit+"',"+(it.type==='decimal'?1:0)+")";
-  var h='<div class="row" data-idx="'+idx+'">';
-  if(editMode) h+='<div class="drag-handle"><span></span><span></span><span></span></div>';
-  h+='<span class="row-icon">'+it.icon+'</span><div class="row-lbl">'+it.label+'</div>';
-  h+='<div class="row-val '+cls+'" onclick="'+onclick+'">'+disp+'</div>';
-  if(editMode) h+='<button class="row-del" onclick="event.stopPropagation();confirmDel('+idx+')">&times;</button>';
-  h+='</div>';
-  return h;
-}
-
-function renderChkRow(it,idx){
-  var c=dayV[it.id]&&dayV[it.id].done;
-  var h='<div class="chk-row" data-idx="'+idx+'" onclick="'+(editMode?'':'togChk(\''+it.id+'\')')+'">';
-  if(editMode) h+='<div class="drag-handle"><span></span><span></span><span></span></div>';
-  h+='<div class="chk'+(c?' on':'')+'" id="c_'+it.id+'"></div>';
-  h+='<span class="chk-icon">'+it.icon+'</span><div class="chk-lbl">'+it.label+'</div>';
-  if(editMode) h+='<button class="row-del" onclick="event.stopPropagation();confirmDel('+idx+')">&times;</button>';
-  h+='</div>';
-  return h;
-}
-
-function toggleEdit(){
-  editMode=!editMode;
-  renderInput();
-}
-
-// --- Delete with confirm ---
-function confirmDel(idx){
-  var bg=document.getElementById('cfmBg');
-  document.getElementById('cfmMsg').textContent='「'+items[idx].label+'」を削除しますか？';
-  bg.classList.add('open');
-  document.getElementById('cfmYes').onclick=function(){
-    items.splice(idx,1);
-    localStorage.setItem(CK,JSON.stringify(items));
-    bg.classList.remove('open');
-    renderInput();
-  };
-  document.getElementById('cfmNo').onclick=function(){bg.classList.remove('open')};
-}
-
-// --- Drag & Drop (touch-based long-press) ---
-var longPressTimer=null,isDragging=false,dragClone=null,allRows=[];
-
-function initDrag(){
-  var listEl=document.getElementById('itemList');
-  if(!listEl) return;
-  var rows=listEl.querySelectorAll('.row,.chk-row');
-  rows.forEach(function(row){
-    row.addEventListener('touchstart',onDragTouchStart,{passive:false});
-    row.addEventListener('touchmove',onDragTouchMove,{passive:false});
-    row.addEventListener('touchend',onDragTouchEnd,{passive:false});
-  });
-}
-
-function onDragTouchStart(e){
-  var row=e.currentTarget;
-  dragIdx=parseInt(row.getAttribute('data-idx'));
-  dragStartY=e.touches[0].clientY;
-  var rect=row.getBoundingClientRect();
-  dragOffsetY=dragStartY-rect.top;
-  longPressTimer=setTimeout(function(){
-    isDragging=true;
-    row.classList.add('dragging');
-    dragEl=row;
-    // Create floating clone
-    dragClone=row.cloneNode(true);
-    dragClone.style.cssText='position:fixed;left:'+rect.left+'px;top:'+rect.top+'px;width:'+rect.width+'px;z-index:500;opacity:.85;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.2);background:#fff;border-radius:10px;padding:0 14px;transition:none;';
-    document.body.appendChild(dragClone);
-    if(navigator.vibrate) navigator.vibrate(30);
-  },400);
-}
-
-function onDragTouchMove(e){
-  if(!isDragging){
-    // Cancel long press if moved too much
-    var dy=Math.abs(e.touches[0].clientY-dragStartY);
-    if(dy>10){clearTimeout(longPressTimer);longPressTimer=null}
-    return;
-  }
-  e.preventDefault();
-  var y=e.touches[0].clientY;
-  if(dragClone) dragClone.style.top=(y-dragOffsetY)+'px';
-
-  // Find which row we're over
-  var listEl=document.getElementById('itemList');
-  var rows=listEl.querySelectorAll('.row,.chk-row');
-  var newOverIdx=-1;
-  rows.forEach(function(r){
-    var rect=r.getBoundingClientRect();
-    var mid=rect.top+rect.height/2;
-    var idx=parseInt(r.getAttribute('data-idx'));
-    if(y>mid) newOverIdx=idx;
-  });
-  if(newOverIdx===-1) newOverIdx=0;
-  if(newOverIdx!==dragOverIdx){
-    dragOverIdx=newOverIdx;
-    // Visual feedback - highlight border
-    rows.forEach(function(r){r.style.borderTop='';r.style.borderBottom=''});
-    if(dragOverIdx>=dragIdx){
-      var target=listEl.querySelector('[data-idx="'+dragOverIdx+'"]');
-      if(target) target.style.borderBottom='3px solid var(--pri)';
-    }else{
-      var target=listEl.querySelector('[data-idx="'+dragOverIdx+'"]');
-      if(target) target.style.borderTop='3px solid var(--pri)';
-    }
-  }
-}
-
-function onDragTouchEnd(e){
-  clearTimeout(longPressTimer);
-  longPressTimer=null;
-  if(!isDragging){dragIdx=-1;return}
-  isDragging=false;
-  if(dragEl) dragEl.classList.remove('dragging');
-  if(dragClone){document.body.removeChild(dragClone);dragClone=null}
-
-  // Reorder items
-  if(dragIdx>=0&&dragOverIdx>=0&&dragIdx!==dragOverIdx){
-    var item=items.splice(dragIdx,1)[0];
-    var insertAt=dragOverIdx>=dragIdx?dragOverIdx:dragOverIdx;
-    items.splice(insertAt,0,item);
-    localStorage.setItem(CK,JSON.stringify(items));
-  }
-  dragIdx=-1;dragOverIdx=-1;dragEl=null;
-  renderInput();
-}
-
-function togChk(id){
-  if(!dayV[id])dayV[id]={done:false};
-  dayV[id].done=!dayV[id].done;
-  renderInput();autoSave();
-}
-
-function calcSleep(){
-  var s=dayV.sleepStart,e=dayV.sleepEnd,el=document.getElementById('sleepDisp');
-  if(!el)return;
-  if(!s||!e){el.textContent='--:--';return}
-  var sm=parseInt(s.split(':')[0])*60+parseInt(s.split(':')[1]),em=parseInt(e.split(':')[0])*60+parseInt(e.split(':')[1]);
-  if(em<=sm)em+=1440;var df=em-sm;
-  el.textContent=Math.floor(df/60)+'時間'+(df%60>0?df%60+'分':'');
-}
-
-// --- Numpad ---
-function openNp(id,ttl,unit,dec){
-  if(editMode)return;
-  npField=id;npDec=dec;
-  var it=items.find(function(i){return i.id===id});
-  var isCum=it&&it.type==='cumulative';
-  npBuf='';
-  document.getElementById('npTtl').textContent=isCum?ttl+'（+加算）':ttl;
-  document.getElementById('npU').textContent=unit;
-  var cur=dayV[id]?parseFloat(dayV[id]):0;
-  document.getElementById('npVal').textContent=isCum?'+0':'0';
-  if(!isCum&&dayV[id]){npBuf=String(dayV[id]);document.getElementById('npVal').textContent=npBuf}
-  document.getElementById('npDot').style.display=dec?'':'none';
-  document.getElementById('npBg').classList.add('open');
-  if(isCum){npIsCum=true;npCumBase=cur}else{npIsCum=false;npCumBase=0}
-}
-function closeNp(){document.getElementById('npBg').classList.remove('open')}
-function npIn(c){if(c==='.'&&npBuf.includes('.'))return;if(c==='.'&&!npBuf)npBuf='0';if(npDec&&npBuf.includes('.')&&npBuf.split('.')[1].length>=npDec)return;npBuf+=c;document.getElementById('npVal').textContent=npIsCum?'+'+(npBuf||'0'):npBuf}
-function npDel(){npBuf=npBuf.slice(0,-1);document.getElementById('npVal').textContent=npIsCum?'+'+(npBuf||'0'):npBuf||'0'}
-function npClr(){npBuf='';document.getElementById('npVal').textContent=npIsCum?'+0':'0'}
-function npOk(){var v=parseFloat(npBuf)||0;var it=items.find(function(i){return i.id===npField});if(it&&it.type==='cumulative'&&v!==0){dayV[npField]=(parseFloat(dayV[npField])||0)+v}else{dayV[npField]=v}closeNp();renderInput();autoSave()}
-
-// --- Time numpad ---
-function openTp(id,ttl){
-  if(editMode)return;
-  tpField=id;tpBuf='';
-  if(dayV[id])tpBuf=dayV[id].replace(':','');
-  document.getElementById('tpTtl').textContent=ttl;
-  updTpDisp();
-  document.getElementById('tpBg').classList.add('open');
-}
-function closeTp(){document.getElementById('tpBg').classList.remove('open')}
-function tpIn(c){
-  if(c==='00'){tpBuf+='00'}else{tpBuf+=c}
-  if(tpBuf.length>4)tpBuf=tpBuf.slice(-4);
-  updTpDisp();
-}
-function tpDel(){tpBuf=tpBuf.slice(0,-1);updTpDisp()}
-function tpClr(){tpBuf='';updTpDisp()}
-function updTpDisp(){
-  var p=tpBuf.padStart(4,'0');
-  document.getElementById('tpDisp').innerHTML='<span>'+p[0]+'</span><span>'+p[1]+'</span><span class="colon">:</span><span>'+p[2]+'</span><span>'+p[3]+'</span>';
-}
-function tpOk(){
-  if(!tpBuf){dayV[tpField]='';closeTp();renderInput();autoSave();return}
-  var p=tpBuf.padStart(4,'0');
-  var h=parseInt(p.substring(0,2)),m=parseInt(p.substring(2,4));
-  if(h>23)h=23;if(m>59)m=m>=30?30:0;else m=m>=15?30:0;
-  dayV[tpField]=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
-  closeTp();renderInput();autoSave();
-}
-
-// --- Auto Save ---
-var _saveTimer=null,_toastTimer=null;
-function autoSave(){
-  clearTimeout(_saveTimer);
-  _saveTimer=setTimeout(function(){
-    var memoEl=document.getElementById('fMemo');
-    if(memoEl)dayV.memo=memoEl.value;
-    dayV.date=curDS;dayV.savedAt=new Date().toISOString();
-    allData[curDS]=Object.assign({},dayV);
-    localStorage.setItem(SK,JSON.stringify(allData));
-    syncToSheet();showAutoSaved();
-  },400);
-}
-function showAutoSaved(){
-  var el=document.getElementById('autoSaved');
-  el.classList.add('show');
-  clearTimeout(_toastTimer);
-  _toastTimer=setTimeout(function(){el.classList.remove('show')},1500);
-}
-function toast(m){var t=document.createElement('div');t.textContent=m;t.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.8);color:#fff;padding:14px 28px;border-radius:14px;font-size:15px;font-weight:600;z-index:999;pointer-events:none';document.body.appendChild(t);setTimeout(function(){t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(function(){t.remove()},300)},1200)}
-
-// --- Views ---
-function showV(v){
-  ['in','ch','hi','st'].forEach(function(x){document.getElementById('v-'+x).classList.toggle('on',x===v);document.getElementById('t-'+x).classList.toggle('on',x===v)});
-  if(v==='ch')renderCharts();if(v==='hi')renderHist();if(v==='st')renderSettings();
-}
-
-// --- Charts ---
-function l30(){var d=[];var n=new Date();for(var i=29;i>=0;i--){var x=new Date(n);x.setDate(x.getDate()-i);d.push(ds(x))}return d}
-function slpH(d){if(!d||!d.sleepStart||!d.sleepEnd)return null;var s=parseInt(d.sleepStart.split(':')[0])*60+parseInt(d.sleepStart.split(':')[1]),e=parseInt(d.sleepEnd.split(':')[0])*60+parseInt(d.sleepEnd.split(':')[1]);if(e<=s)e+=1440;return(e-s)/60}
-function rtRate(d){if(!d)return null;var chks=items.filter(function(i){return i.type==='checkbox'});if(!chks.length)return null;var done=chks.filter(function(i){return d[i.id]&&d[i.id].done}).length;return(done/chks.length)*100}
-function drawC(cId,sId,days,vals,unit,color){
-  var cv=document.getElementById(cId),ctx=cv.getContext('2d'),w=cv.width=cv.parentElement.clientWidth,h=cv.height=160;
-  ctx.clearRect(0,0,w,h);var fv=vals.filter(function(v){return v!==null&&v!==0});
-  if(!fv.length){ctx.fillStyle='#999';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('データがありません',w/2,h/2);document.getElementById(sId).innerHTML='';return}
-  var P={t:18,r:12,b:24,l:46},cw=w-P.l-P.r,ch=h-P.t-P.b;
-  var mn=Math.min.apply(null,fv)*.95,mx=Math.max.apply(null,fv)*1.05,rng=mx-mn||1;
-  ctx.strokeStyle='#e5e5ea';ctx.lineWidth=1;
-  for(var i=0;i<=4;i++){var y=P.t+ch-(ch*i/4);ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(w-P.r,y);ctx.stroke();ctx.fillStyle='#999';ctx.font='10px sans-serif';ctx.textAlign='right';ctx.fillText((mn+rng*i/4).toFixed(unit==='歩'?0:1),P.l-4,y+3)}
-  ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.lineJoin='round';var st=false;
-  days.forEach(function(d,i){var v=vals[i];if(v===null||v===0)return;var x=P.l+(cw*i/(days.length-1)),y=P.t+ch-((v-mn)/rng*ch);if(!st){ctx.moveTo(x,y);st=true}else ctx.lineTo(x,y)});ctx.stroke();
-  var avg=fv.reduce(function(a,b){return a+b},0)/fv.length;
-  document.getElementById(sId).innerHTML='<div>平均:<span>'+avg.toFixed(1)+unit+'</span></div><div>最高:<span>'+Math.max.apply(null,fv).toFixed(1)+unit+'</span></div><div>最低:<span>'+Math.min.apply(null,fv).toFixed(1)+unit+'</span></div><div>記録:<span>'+fv.length+'日</span></div>';
-}
-function renderCharts(){
-  var days=l30();
-  var html='';
-  html+='<div class="chart-c"><div class="chart-t">体重（30日）</div><canvas id="cW" height="160"></canvas><div class="chart-s" id="sW"></div></div>';
-  html+='<div class="chart-c"><div class="chart-t">睡眠時間（30日）</div><canvas id="cS" height="160"></canvas><div class="chart-s" id="sS"></div></div>';
-  html+='<div class="chart-c"><div class="chart-t">歩数（30日）</div><canvas id="cSt" height="160"></canvas><div class="chart-s" id="sSt"></div></div>';
-  html+='<div class="chart-c"><div class="chart-t">ルーチン達成率（30日）</div><canvas id="cR" height="160"></canvas><div class="chart-s" id="sR"></div></div>';
-  html+='<div class="chart-c"><div class="chart-t">水分摂取量（30日）</div><canvas id="cWa" height="160"></canvas><div class="chart-s" id="sWa"></div></div>';
-  document.getElementById('chartArea').innerHTML=html;
-  setTimeout(function(){
-    drawC('cW','sW',days,days.map(function(d){return allData[d]?allData[d].weight:null}),'kg','#2ec4a0');
-    drawC('cS','sS',days,days.map(function(d){return slpH(allData[d])}),'h','#af52de');
-    drawC('cSt','sSt',days,days.map(function(d){return allData[d]?allData[d].steps:null}),'歩','#34c759');
-    drawC('cR','sR',days,days.map(function(d){return rtRate(allData[d])}),'%','#ff9500');
-    drawC('cWa','sWa',days,days.map(function(d){return allData[d]?allData[d].water:null}),'ml','#007aff');
-  },50);
-}
-
-// --- History ---
-function renderHist(){
-  var dates=Object.keys(allData).sort().reverse().slice(0,30);
-  if(!dates.length){document.getElementById('histList').innerHTML='<div class="empty-m">記録がありません</div>';return}
-  document.getElementById('histList').innerHTML=dates.map(function(d){
-    var v=allData[d],dd=pd(d),dw=['日','月','火','水','木','金','土'][dd.getDay()];
-    var sl=slpH(v),chks=items.filter(function(i){return i.type==='checkbox'}),dn=chks.filter(function(i){return v[i.id]&&v[i.id].done}).length;
-    var p=[];if(sl)p.push('睡眠'+sl.toFixed(1)+'h');if(v.weight)p.push(v.weight+'kg');if(v.steps)p.push(v.steps.toLocaleString()+'歩');if(v.water)p.push('水'+v.water+'ml');
-    return'<div class="hist-row" onclick="curDS=\''+d+'\';updDate();loadDay();renderInput();showV(\'in\')"><div class="hist-d">'+(dd.getMonth()+1)+'/'+dd.getDate()+'('+dw+')</div><div class="hist-v">'+p.join(' · ')+'</div></div>';
-  }).join('');
-}
-
-// --- Settings ---
-function renderSettings(){
-  var html='';
-  html+='<div class="sec"><div class="sec-h">項目管理</div><div class="sec-b">';
-  items.forEach(function(it,i){
-    html+='<div class="row" onclick="openEd('+i+')"><span class="row-icon">'+it.icon+'</span><div class="row-lbl">'+it.label+'</div><div style="font-size:11px;color:var(--txt2)">'+({integer:'自然数',decimal:'小数',cumulative:'累積',checkbox:'チェック',time:'時刻'}[it.type])+(it.unit?' / '+it.unit:'')+'</div></div>';
-  });
-  html+='<div class="add-btn" onclick="openEd(-1)">＋ 項目を追加</div></div></div>';
-  html+='<div class="sec"><div class="sec-h">Google Sheets</div><div class="sec-b"><div class="s-field"><label>Web App URL</label><input type="text" id="syncIn" value="'+syncUrl+'" placeholder="https://script.google.com/..."></div><div class="s-btns"><button class="b-pri" onclick="syncUrl=document.getElementById(\'syncIn\').value.trim();localStorage.setItem(UK,syncUrl);toast(\'保存しました\')">保存</button><button class="b-sec" onclick="testSync()">テスト</button></div></div></div>';
-  html+='<div class="sec"><div class="sec-h">データ</div><div class="sec-b"><div style="font-size:13px;color:var(--txt2);margin-bottom:8px">記録日数：'+Object.keys(allData).length+'日</div><div class="s-btns"><button class="b-sec" onclick="exportCSV()">CSV出力</button><button class="b-sec" style="color:var(--red)" onclick="if(confirm(\'全データを削除？\')&&confirm(\'本当に？\')){allData={};localStorage.removeItem(SK);loadDay();renderInput();toast(\'削除しました\')}">全削除</button></div></div></div>';
-  document.getElementById('settingsArea').innerHTML=html;
-}
-
-// --- Item editor ---
-function openEd(idx){
-  edIdx=idx;
-  document.getElementById('edTitle').textContent=idx>=0?'項目を編集':'項目を追加';
-  var ig='';ICONS.forEach(function(ic){ig+='<div class="icon-opt" onclick="selIcon(this,\''+ic+'\')">'+ic+'</div>'});
-  document.getElementById('iconGrid').innerHTML=ig;
-  if(idx>=0){
-    var it=items[idx];
-    edIcon=it.icon;document.getElementById('edName').value=it.label;
-    document.getElementById('edType').value=it.type;document.getElementById('edUnit').value=it.unit;
-    document.querySelectorAll('.icon-opt').forEach(function(el){if(el.textContent===it.icon)el.classList.add('sel')});
-  }else{
-    edIcon=ICONS[0];document.getElementById('edName').value='';
-    document.getElementById('edType').value='integer';document.getElementById('edUnit').value='';
-    document.querySelector('.icon-opt').classList.add('sel');
-  }
-  updEdUnit();
-  document.getElementById('edType').onchange=updEdUnit;
-  document.getElementById('edBg').classList.add('open');
-}
-function closeEd(){document.getElementById('edBg').classList.remove('open')}
-function selIcon(el,ic){document.querySelectorAll('.icon-opt').forEach(function(e){e.classList.remove('sel')});el.classList.add('sel');edIcon=ic}
-function updEdUnit(){var t=document.getElementById('edType').value;document.getElementById('edUnitField').style.display=(t==='checkbox'||t==='time')?'none':''}
-function saveItem(){
-  var name=document.getElementById('edName').value.trim();
-  if(!name){toast('項目名を入力してください');return}
-  var obj={id:edIdx>=0?items[edIdx].id:'custom_'+Date.now(),label:name,icon:edIcon,type:document.getElementById('edType').value,unit:document.getElementById('edUnit').value.trim()};
-  if(edIdx>=0)items[edIdx]=obj;else items.push(obj);
-  localStorage.setItem(CK,JSON.stringify(items));
-  closeEd();renderInput();if(document.getElementById('v-st').classList.contains('on'))renderSettings();
-}
-
-// --- Sync ---
-function setSyncState(state){
-  var dot=document.getElementById('syncDot');
-  dot.classList.remove('ok','syncing');
-  if(state)dot.classList.add(state);
-  // Show/hide sync warning
-  var warn=document.getElementById('syncWarn');
-  if(state==='ok')warn.classList.remove('show');
-  else if(!syncUrl)warn.classList.add('show');
-}
-function checkSyncOnLoad(){
-  if(!syncUrl){document.getElementById('syncWarn').classList.add('show')}
-}
-function pullFromSheet(){
-  if(!syncUrl){setSyncState('');return}
-  setSyncState('syncing');
-  var cbName='_llcb_'+Date.now();
-  var script=document.createElement('script');
-  var done=false;
-  window[cbName]=function(res){
-    done=true;
-    try{document.head.removeChild(script)}catch(e){}
-    delete window[cbName];
-    if(!res||!res.success){setSyncState('');return}
-    var remote=res.data||{};
-    var merged=false;
-    Object.keys(remote).forEach(function(date){
-      var r=remote[date],l=allData[date];
-      if(!l){allData[date]=r;merged=true}
-      else{
-        var rTime=r.savedAt?new Date(r.savedAt).getTime():0;
-        var lTime=l.savedAt?new Date(l.savedAt).getTime():0;
-        if(rTime>lTime){allData[date]=r;merged=true}
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>暮らしの記録</title>
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="theme-color" content="#7edbbe" />
+    <link rel="apple-touch-icon" href="icon-180.png" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
       }
-    });
-    if(merged){
-      localStorage.setItem(SK,JSON.stringify(allData));
-      loadDay();renderInput();
-      toast('クラウドから復元しました');
-    }
-    setSyncState('ok');
-  };
-  script.src=syncUrl+'?callback='+cbName;
-  script.onerror=function(){done=true;setSyncState('');delete window[cbName]};
-  document.head.appendChild(script);
-  setTimeout(function(){if(!done){setSyncState('');delete window[cbName];try{document.head.removeChild(script)}catch(e){}}},10000);
-}
-function syncToSheet(){if(!syncUrl)return;setSyncState('syncing');var ifr=document.createElement('iframe');ifr.name='sf_'+Date.now();ifr.style.display='none';document.body.appendChild(ifr);var fm=document.createElement('form');fm.method='POST';fm.action=syncUrl;fm.target=ifr.name;fm.style.display='none';var inp=document.createElement('textarea');inp.name='data';inp.value=JSON.stringify(allData);fm.appendChild(inp);document.body.appendChild(fm);fm.submit();setTimeout(function(){try{document.body.removeChild(ifr)}catch(e){}try{document.body.removeChild(fm)}catch(e){}setSyncState('ok')},4000)}
-function testSync(){if(!syncUrl){toast('URLを入力');return}pullFromSheet()}
-function exportCSV(){
-  var dates=Object.keys(allData).sort();if(!dates.length){toast('データなし');return}
-  var numItems=items.filter(function(i){return i.type!=='checkbox'});var chkItems=items.filter(function(i){return i.type==='checkbox'});
-  var hdr=['日付'].concat(numItems.map(function(i){return i.label})).concat(chkItems.map(function(i){return i.label})).concat(['メモ']);
-  var rows=[hdr.join(',')];
-  dates.forEach(function(d){var v=allData[d];var c=[d].concat(numItems.map(function(i){return v[i.id]||''})).concat(chkItems.map(function(i){return v[i.id]&&v[i.id].done?'1':'0'})).concat(['"'+(v.memo||'').replace(/"/g,'""')+'"']);rows.push(c.join(','))});
-  var blob=new Blob(['\uFEFF'+rows.join('\n')],{type:'text/csv'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='life-logger_'+ds(new Date())+'.csv';a.click();
-}
+      :root {
+        --bg: #f2fbf8;
+        --card: #fff;
+        --pri: #7edbbe;
+        --pri-dk: #4fc9a0;
+        --pri-lt: #e8f8f2;
+        --txt: #1c1c1e;
+        --txt2: #8e8e93;
+        --bdr: #d8f0e8;
+        --grn: #34c759;
+        --red: #ff3b30;
+        --org: #ff9500;
+        --shadow: 0 2px 12px rgba(126, 219, 190, 0.15);
+        --r: 14px;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+        background: var(--bg);
+        color: var(--txt);
+        -webkit-user-select: none;
+        user-select: none;
+      }
 
-init();
-</script>
-</body>
+      .hdr {
+        background: linear-gradient(135deg, #7edbbe, #5ccfa8);
+        color: #fff;
+        padding: 14px 16px 16px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 200;
+      }
+      .hdr-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .hdr h1 {
+        font-size: 17px;
+        font-weight: 700;
+      }
+      .hdr-sub {
+        font-size: 12px;
+        opacity: 0.8;
+        margin-top: 1px;
+      }
+      .hdr-r {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .hdr-r .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        transition: 0.3s;
+      }
+      .hdr-r .dot.syncing {
+        background: #ff9500;
+        animation: pulse 0.8s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+      .hdr-r .dot.ok {
+        background: #34c759;
+      }
+      .hdr-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: #fff;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        font-size: 17px;
+        cursor: pointer;
+      }
+      .date-nav {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .date-nav button {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: #fff;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        font-size: 18px;
+        cursor: pointer;
+      }
+      .date-nav button:active {
+        background: rgba(255, 255, 255, 0.4);
+      }
+      .date-nav .cur {
+        font-size: 16px;
+        font-weight: 600;
+        min-width: 140px;
+        text-align: center;
+      }
+      .date-nav .today {
+        font-size: 11px;
+        padding: 5px 12px;
+        border-radius: 12px;
+        width: auto;
+      }
+
+      .tabs {
+        display: flex;
+        background: var(--card);
+        border-bottom: 1px solid var(--bdr);
+        position: fixed;
+        top: 88px;
+        left: 0;
+        right: 0;
+        z-index: 199;
+      }
+      .tab {
+        flex: 1;
+        padding: 11px 2px;
+        text-align: center;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--txt2);
+        border: none;
+        background: none;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+      }
+      .tab.on {
+        color: var(--pri);
+        border-bottom-color: var(--pri);
+      }
+
+      .main {
+        padding-top: 136px;
+        padding-bottom: 20px;
+      }
+      .ct {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 12px;
+      }
+      .sec {
+        background: var(--card);
+        border-radius: var(--r);
+        box-shadow: var(--shadow);
+        margin-bottom: 14px;
+        overflow: hidden;
+      }
+      .sec-h {
+        padding: 12px 14px 8px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--pri-dk);
+        letter-spacing: 0.3px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        justify-content: space-between;
+      }
+      .sec-b {
+        padding: 0 14px 12px;
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        padding: 11px 0;
+        border-bottom: 1px solid var(--bdr);
+        min-height: 46px;
+        position: relative;
+        transition: background 0.15s;
+      }
+      .row:last-child {
+        border-bottom: none;
+      }
+      .row.dragging {
+        opacity: 0.4;
+        background: var(--pri-lt);
+      }
+      .row-icon {
+        font-size: 18px;
+        margin-right: 8px;
+        flex-shrink: 0;
+      }
+      .row-lbl {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .row-val {
+        padding: 7px 12px;
+        background: var(--pri-lt);
+        border-radius: 10px;
+        min-width: 80px;
+        text-align: center;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--pri-dk);
+        cursor: pointer;
+      }
+      .row-val:active {
+        background: #cdf5ea;
+      }
+      .row-val.empty {
+        color: var(--txt2);
+        font-weight: 400;
+        font-size: 13px;
+      }
+      .row-val .u {
+        font-size: 11px;
+        font-weight: 400;
+        color: var(--txt2);
+        margin-left: 2px;
+      }
+
+      .row-del {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: none;
+        background: transparent;
+        color: var(--txt2);
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 6px;
+        flex-shrink: 0;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+      .edit-mode .row-del {
+        opacity: 1;
+      }
+      .row-del:active {
+        background: rgba(255, 59, 48, 0.1);
+        color: var(--red);
+      }
+
+      .sleep-box {
+        background: linear-gradient(135deg, var(--pri-lt), #d4f5ec);
+        border-radius: 12px;
+        padding: 12px;
+        text-align: center;
+        margin-bottom: 8px;
+      }
+      .sleep-val {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--pri-dk);
+      }
+      .sleep-lbl {
+        font-size: 11px;
+        color: var(--txt2);
+        margin-top: 2px;
+      }
+
+      .chk-row {
+        display: flex;
+        align-items: center;
+        padding: 11px 0;
+        border-bottom: 1px solid var(--bdr);
+        cursor: pointer;
+        min-height: 46px;
+        position: relative;
+        transition: background 0.15s;
+      }
+      .chk-row:last-child {
+        border-bottom: none;
+      }
+      .chk-row:active {
+        opacity: 0.7;
+      }
+      .chk-row.dragging {
+        opacity: 0.4;
+        background: var(--pri-lt);
+      }
+      .chk {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        border: 2.5px solid var(--bdr);
+        margin-right: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: 0.2s;
+      }
+      .chk.on {
+        background: var(--grn);
+        border-color: var(--grn);
+      }
+      .chk.on::after {
+        content: "\2713";
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .chk-icon {
+        font-size: 16px;
+        margin-right: 6px;
+      }
+      .chk-lbl {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .auto-saved {
+        position: fixed;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        z-index: 999;
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+      }
+      .auto-saved.show {
+        opacity: 1;
+      }
+
+      /* Drag indicator */
+      .drag-handle {
+        width: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        margin-right: 6px;
+        flex-shrink: 0;
+        opacity: 0;
+        transition: opacity 0.2s;
+        cursor: grab;
+      }
+      .edit-mode .drag-handle {
+        opacity: 0.5;
+      }
+      .drag-handle span {
+        display: block;
+        width: 14px;
+        height: 2px;
+        background: var(--txt2);
+        border-radius: 1px;
+      }
+
+      .drop-indicator {
+        height: 3px;
+        background: var(--pri);
+        border-radius: 2px;
+        margin: 0 -14px;
+        transition: opacity 0.15s;
+        opacity: 0;
+      }
+      .drop-indicator.active {
+        opacity: 1;
+      }
+
+      /* Edit mode toggle */
+      .edit-toggle {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--pri-dk);
+        cursor: pointer;
+        padding: 4px 10px;
+        border-radius: 8px;
+        background: var(--pri-lt);
+        border: none;
+      }
+      .edit-toggle:active {
+        background: var(--bdr);
+      }
+
+      /* Numpad */
+      .np-bg {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 300;
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+      }
+      .np-bg.open {
+        display: flex;
+      }
+      .np-box {
+        background: var(--card);
+        border-radius: 20px 20px 0 0;
+        width: 100%;
+        max-width: 500px;
+        padding: 16px 14px 20px;
+      }
+      .np-hdr {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .np-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--txt2);
+      }
+      .np-x {
+        background: none;
+        border: none;
+        font-size: 18px;
+        color: var(--txt2);
+        cursor: pointer;
+        padding: 4px 8px;
+      }
+      .np-disp {
+        font-size: 34px;
+        font-weight: 700;
+        text-align: right;
+        padding: 10px 14px;
+        background: var(--bg);
+        border-radius: 12px;
+        margin-bottom: 10px;
+        min-height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+      }
+      .np-disp .np-u {
+        font-size: 15px;
+        font-weight: 400;
+        color: var(--txt2);
+      }
+      .np-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+      }
+      .np-b {
+        padding: 14px;
+        border: none;
+        border-radius: 10px;
+        font-size: 20px;
+        font-weight: 600;
+        cursor: pointer;
+        background: var(--bg);
+        color: var(--txt);
+        font-family: inherit;
+      }
+      .np-b:active {
+        background: var(--bdr);
+      }
+      .np-b.act {
+        background: var(--pri-lt);
+        color: var(--pri-dk);
+      }
+      .np-b.go {
+        background: var(--pri);
+        color: #fff;
+      }
+      .np-b.go:active {
+        background: var(--pri-dk);
+      }
+      .np-row2 {
+        display: flex;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .np-row2 .np-b {
+        flex: 1;
+        padding: 13px;
+        font-size: 14px;
+      }
+
+      /* Time numpad */
+      .tp-disp {
+        font-size: 40px;
+        font-weight: 700;
+        text-align: center;
+        padding: 12px;
+        letter-spacing: 4px;
+      }
+      .tp-disp .colon {
+        color: var(--txt2);
+      }
+
+      /* Views */
+      .vp {
+        display: none;
+      }
+      .vp.on {
+        display: block;
+      }
+      .chart-c {
+        background: var(--card);
+        border-radius: var(--r);
+        box-shadow: var(--shadow);
+        margin-bottom: 14px;
+        padding: 14px;
+      }
+      .chart-t {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--pri-dk);
+        margin-bottom: 10px;
+      }
+      .chart-s {
+        display: flex;
+        gap: 10px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+        font-size: 11px;
+        color: var(--txt2);
+      }
+      .chart-s span {
+        font-weight: 600;
+        color: var(--txt);
+      }
+      .hist-row {
+        display: flex;
+        align-items: center;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--bdr);
+        cursor: pointer;
+      }
+      .hist-row:active {
+        background: var(--pri-lt);
+      }
+      .hist-d {
+        font-size: 13px;
+        font-weight: 600;
+        width: 65px;
+        color: var(--pri-dk);
+      }
+      .hist-v {
+        flex: 1;
+        font-size: 12px;
+        color: var(--txt2);
+        line-height: 1.5;
+      }
+      .empty-m {
+        text-align: center;
+        padding: 36px 16px;
+        color: var(--txt2);
+        font-size: 13px;
+      }
+
+      /* Settings */
+      .s-field {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--bdr);
+      }
+      .s-field:last-child {
+        border-bottom: none;
+      }
+      .s-field label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--txt2);
+        display: block;
+        margin-bottom: 4px;
+      }
+      .s-field input[type="text"] {
+        width: 100%;
+        padding: 9px;
+        border: 1px solid var(--bdr);
+        border-radius: 8px;
+        font-size: 13px;
+        font-family: inherit;
+        background: var(--bg);
+      }
+      .s-btns {
+        display: flex;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .s-btns button {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .b-pri {
+        background: var(--pri);
+        color: #fff;
+      }
+      .b-sec {
+        background: var(--bg);
+        color: var(--txt);
+      }
+
+      /* Custom item editor */
+      .editor-bg {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 300;
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+      }
+      .editor-bg.open {
+        display: flex;
+      }
+      .editor {
+        background: var(--card);
+        border-radius: 20px 20px 0 0;
+        width: 100%;
+        max-width: 500px;
+        padding: 20px 16px 24px;
+        max-height: 85vh;
+        overflow-y: auto;
+      }
+      .ed-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 16px;
+      }
+      .ed-field {
+        margin-bottom: 14px;
+      }
+      .ed-field label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--txt2);
+        display: block;
+        margin-bottom: 4px;
+      }
+      .ed-field input,
+      .ed-field select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--bdr);
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
+        background: var(--bg);
+        -webkit-appearance: none;
+      }
+      .icon-grid {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        gap: 4px;
+      }
+      .icon-opt {
+        padding: 6px;
+        text-align: center;
+        font-size: 18px;
+        border-radius: 6px;
+        cursor: pointer;
+        border: 2px solid transparent;
+      }
+      .icon-opt:active,
+      .icon-opt.sel {
+        border-color: var(--pri);
+        background: var(--pri-lt);
+      }
+      .ed-btns {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+      }
+      .ed-btns button {
+        flex: 1;
+        padding: 13px;
+        border: none;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      textarea.memo {
+        width: 100%;
+        border: 1px solid var(--bdr);
+        border-radius: 10px;
+        padding: 10px;
+        font-size: 14px;
+        font-family: inherit;
+        resize: vertical;
+        background: var(--bg);
+        min-height: 70px;
+        -webkit-user-select: text;
+        user-select: text;
+      }
+
+      .add-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px;
+        color: var(--pri);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        gap: 4px;
+      }
+      .add-btn:active {
+        opacity: 0.6;
+      }
+
+      /* Sync warning banner */
+      .sync-warn {
+        background: #ff3b30;
+        color: #fff;
+        text-align: center;
+        padding: 8px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        position: fixed;
+        top: 88px;
+        left: 0;
+        right: 0;
+        z-index: 198;
+        display: none;
+      }
+      .sync-warn.show {
+        display: block;
+      }
+      .sync-warn + .tabs {
+        top: 112px;
+      }
+      .sync-warn.show ~ .main {
+        padding-top: 160px;
+      }
+
+      /* Confirm dialog */
+      .confirm-bg {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 400;
+        display: none;
+        align-items: center;
+        justify-content: center;
+      }
+      .confirm-bg.open {
+        display: flex;
+      }
+      .confirm-box {
+        background: var(--card);
+        border-radius: 16px;
+        padding: 24px 20px;
+        width: 280px;
+        text-align: center;
+      }
+      .confirm-msg {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        line-height: 1.5;
+      }
+      .confirm-btns {
+        display: flex;
+        gap: 8px;
+      }
+      .confirm-btns button {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hdr">
+      <div class="hdr-top">
+        <div>
+          <h1>暮らしの記録</h1>
+          <div class="hdr-sub" id="hdrDate"></div>
+        </div>
+        <div class="hdr-r">
+          <span class="dot" id="syncDot"></span
+          ><button class="hdr-btn" onclick="showV('st')">&#9881;</button>
+        </div>
+      </div>
+      <div class="date-nav">
+        <button onclick="chgDate(-1)">&lsaquo;</button>
+        <div class="cur" id="curDate"></div>
+        <button onclick="chgDate(1)">&rsaquo;</button>
+        <button class="today" onclick="goToday()">今日</button>
+      </div>
+    </div>
+    <div class="sync-warn" id="syncWarn">
+      データ同期が未接続です。設定からSync URLを確認してください
+    </div>
+    <div class="tabs">
+      <button class="tab on" id="t-in" onclick="showV('in')">入力</button>
+      <button class="tab" id="t-ch" onclick="showV('ch')">グラフ</button>
+      <button class="tab" id="t-hi" onclick="showV('hi')">履歴</button>
+      <button class="tab" id="t-st" onclick="showV('st')">設定</button>
+    </div>
+    <div class="main">
+      <div class="vp on" id="v-in"><div class="ct" id="inputArea"></div></div>
+      <div class="vp" id="v-ch"><div class="ct" id="chartArea"></div></div>
+      <div class="vp" id="v-hi">
+        <div class="ct">
+          <div class="sec">
+            <div class="sec-h">直近の記録</div>
+            <div id="histList"></div>
+          </div>
+        </div>
+      </div>
+      <div class="vp" id="v-st"><div class="ct" id="settingsArea"></div></div>
+    </div>
+    <div class="auto-saved" id="autoSaved">自動保存しました</div>
+
+    <!-- Numpad -->
+    <div
+      class="np-bg"
+      id="npBg"
+      onclick="if (event.target === this) closeNp();"
+    >
+      <div class="np-box">
+        <div class="np-hdr">
+          <div class="np-title" id="npTtl"></div>
+          <button class="np-x" onclick="closeNp()">&times;</button>
+        </div>
+        <div class="np-disp">
+          <span id="npVal">0</span><span class="np-u" id="npU"></span>
+        </div>
+        <div class="np-grid">
+          <button class="np-b" onclick="npIn('7')">7</button
+          ><button class="np-b" onclick="npIn('8')">8</button
+          ><button class="np-b" onclick="npIn('9')">9</button>
+          <button class="np-b" onclick="npIn('4')">4</button
+          ><button class="np-b" onclick="npIn('5')">5</button
+          ><button class="np-b" onclick="npIn('6')">6</button>
+          <button class="np-b" onclick="npIn('1')">1</button
+          ><button class="np-b" onclick="npIn('2')">2</button
+          ><button class="np-b" onclick="npIn('3')">3</button>
+          <button class="np-b act" id="npDot" onclick="npIn('.')">.</button
+          ><button class="np-b" onclick="npIn('0')">0</button
+          ><button class="np-b act" onclick="npDel()">&#9003;</button>
+        </div>
+        <div class="np-row2">
+          <button class="np-b act" onclick="npClr()">クリア</button
+          ><button class="np-b go" onclick="npOk()">決定</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Time numpad -->
+    <div
+      class="np-bg"
+      id="tpBg"
+      onclick="if (event.target === this) closeTp();"
+    >
+      <div class="np-box">
+        <div class="np-hdr">
+          <div class="np-title" id="tpTtl"></div>
+          <button class="np-x" onclick="closeTp()">&times;</button>
+        </div>
+        <div class="tp-disp" id="tpDisp">
+          <span>0</span><span>0</span><span class="colon">:</span><span>0</span
+          ><span>0</span>
+        </div>
+        <div class="np-grid">
+          <button class="np-b" onclick="tpIn('7')">7</button
+          ><button class="np-b" onclick="tpIn('8')">8</button
+          ><button class="np-b" onclick="tpIn('9')">9</button>
+          <button class="np-b" onclick="tpIn('4')">4</button
+          ><button class="np-b" onclick="tpIn('5')">5</button
+          ><button class="np-b" onclick="tpIn('6')">6</button>
+          <button class="np-b" onclick="tpIn('1')">1</button
+          ><button class="np-b" onclick="tpIn('2')">2</button
+          ><button class="np-b" onclick="tpIn('3')">3</button>
+          <button class="np-b act" onclick="tpIn('00')">00</button
+          ><button class="np-b" onclick="tpIn('0')">0</button
+          ><button class="np-b act" onclick="tpDel()">&#9003;</button>
+        </div>
+        <div class="np-row2">
+          <button class="np-b act" onclick="tpClr()">クリア</button
+          ><button class="np-b go" onclick="tpOk()">決定</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Item editor -->
+    <div
+      class="editor-bg"
+      id="edBg"
+      onclick="if (event.target === this) closeEd();"
+    >
+      <div class="editor">
+        <div class="ed-title" id="edTitle">項目を追加</div>
+        <div class="ed-field">
+          <label>アイコン</label>
+          <div class="icon-grid" id="iconGrid"></div>
+        </div>
+        <div class="ed-field">
+          <label>項目名</label
+          ><input type="text" id="edName" placeholder="例：体温" />
+        </div>
+        <div class="ed-field">
+          <label>入力方式</label>
+          <select id="edType">
+            <option value="integer">自然数（0, 1, 2, ...）</option>
+            <option value="decimal">小数点第1位（0.0）</option>
+            <option value="cumulative">累積値（増え続ける数値）</option>
+            <option value="checkbox">チェックボックス</option>
+            <option value="time">時刻（HH:MM）</option>
+          </select>
+        </div>
+        <div class="ed-field" id="edUnitField">
+          <label>単位</label
+          ><input type="text" id="edUnit" placeholder="例：℃、歩、ml" />
+        </div>
+        <div class="ed-btns">
+          <button class="b-sec" onclick="closeEd()">キャンセル</button>
+          <button class="b-pri" onclick="saveItem()">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirm dialog -->
+    <div class="confirm-bg" id="cfmBg">
+      <div class="confirm-box">
+        <div class="confirm-msg" id="cfmMsg"></div>
+        <div class="confirm-btns">
+          <button class="b-sec" id="cfmNo">キャンセル</button>
+          <button style="background: var(--red); color: #fff" id="cfmYes">
+            削除
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const SK = "life-logger-data",
+        CK = "life-logger-cfg",
+        UK = "life-logger-sync";
+      const DEFAULT_SYNC =
+        "https://script.google.com/macros/s/AKfycbxja8XBaPrHOGsDEa8Y_Yzog-ZFb6U3R9eBe8wdjH5EnvEFTwhfUiGT3XBVd1DYX7Gi/exec";
+      const ICONS = [
+        "🌙",
+        "☀️",
+        "💤",
+        "⏰",
+        "🍽",
+        "💧",
+        "⚖️",
+        "📏",
+        "🔥",
+        "👣",
+        "📱",
+        "📊",
+        "📈",
+        "📉",
+        "🎯",
+        "✅",
+        "🧘",
+        "📋",
+        "📧",
+        "📅",
+        "🤸",
+        "💊",
+        "🏠",
+        "💝",
+        "🏃",
+        "🚶",
+        "🧠",
+        "💪",
+        "❤️",
+        "🩺",
+        "🌡",
+        "💉",
+        "🍎",
+        "🥗",
+        "🍺",
+        "☕",
+        "📖",
+        "🎵",
+        "🎮",
+        "💰",
+        "🛒",
+        "📝",
+        "⭐",
+        "🔔",
+        "🕐",
+        "📸",
+        "🎨",
+        "🗂",
+        "🌿",
+        "🎓",
+      ];
+
+      const DEFAULT_ITEMS = [
+        {
+          id: "sleepStart",
+          label: "就寝時刻",
+          icon: "🌙",
+          type: "time",
+          unit: "",
+        },
+        {
+          id: "sleepEnd",
+          label: "起床時刻",
+          icon: "☀️",
+          type: "time",
+          unit: "",
+        },
+        {
+          id: "nap",
+          label: "パワーナップ",
+          icon: "💤",
+          type: "integer",
+          unit: "分",
+        },
+        {
+          id: "lastMeal",
+          label: "前日の最終食事",
+          icon: "🍽",
+          type: "time",
+          unit: "",
+        },
+        {
+          id: "water",
+          label: "水分（無糖）",
+          icon: "💧",
+          type: "integer",
+          unit: "ml",
+        },
+        {
+          id: "weight",
+          label: "体重",
+          icon: "⚖️",
+          type: "decimal",
+          unit: "kg",
+        },
+        {
+          id: "bodyFat",
+          label: "体脂肪率",
+          icon: "📏",
+          type: "decimal",
+          unit: "%",
+        },
+        {
+          id: "calories",
+          label: "消費カロリー",
+          icon: "🔥",
+          type: "integer",
+          unit: "kcal",
+        },
+        {
+          id: "meditation",
+          label: "瞑想",
+          icon: "🧘",
+          type: "checkbox",
+          unit: "",
+        },
+        {
+          id: "taskCheck",
+          label: "タスクチェック",
+          icon: "📋",
+          type: "checkbox",
+          unit: "",
+        },
+        {
+          id: "emailCheck",
+          label: "メールチェック",
+          icon: "📧",
+          type: "checkbox",
+          unit: "",
+        },
+        {
+          id: "calendarCheck",
+          label: "カレンダーチェック",
+          icon: "📅",
+          type: "checkbox",
+          unit: "",
+        },
+        {
+          id: "stretch",
+          label: "朝のストレッチ",
+          icon: "🤸",
+          type: "checkbox",
+          unit: "",
+        },
+        {
+          id: "supplement",
+          label: "サプリの服用",
+          icon: "💊",
+          type: "checkbox",
+          unit: "",
+        },
+        {
+          id: "housework",
+          label: "家事",
+          icon: "🏠",
+          type: "checkbox",
+          unit: "",
+        },
+        {
+          id: "wifeContribution",
+          label: "妙子に貢献すること",
+          icon: "💝",
+          type: "checkbox",
+          unit: "",
+        },
+        { id: "steps", label: "歩数", icon: "👣", type: "integer", unit: "歩" },
+        {
+          id: "tabelogFollowers",
+          label: "食べログ フォロワー",
+          icon: "⭐",
+          type: "cumulative",
+          unit: "人",
+        },
+        {
+          id: "tabelogReactions",
+          label: "食べログ リアクション",
+          icon: "📊",
+          type: "cumulative",
+          unit: "件",
+        },
+        {
+          id: "instaFollowers",
+          label: "Instagram フォロワー",
+          icon: "📸",
+          type: "cumulative",
+          unit: "人",
+        },
+      ];
+
+      let allData = {},
+        items = [],
+        dayV = {},
+        curDS = "",
+        syncUrl = "";
+      let npField = "",
+        npBuf = "",
+        npDec = 0,
+        npIsCum = false,
+        npCumBase = 0;
+      let tpField = "",
+        tpBuf = "";
+      let edIdx = -1,
+        edIcon = "";
+      let editMode = false;
+
+      // --- Drag state ---
+      let dragIdx = -1,
+        dragOverIdx = -1,
+        dragEl = null,
+        dragStartY = 0,
+        dragOffsetY = 0;
+
+      function init() {
+        allData = JSON.parse(localStorage.getItem(SK) || "{}");
+        const stored = JSON.parse(localStorage.getItem(CK) || "null");
+        if (stored) {
+          // Migrate: remove cat property from old items
+          items = stored.map(function (it) {
+            var o = {
+              id: it.id,
+              label: it.label,
+              icon: it.icon,
+              type: it.type,
+              unit: it.unit || "",
+            };
+            return o;
+          });
+        } else {
+          items = JSON.parse(JSON.stringify(DEFAULT_ITEMS));
+        }
+        syncUrl = localStorage.getItem(UK) || DEFAULT_SYNC;
+        if (!localStorage.getItem(UK) && DEFAULT_SYNC) {
+          localStorage.setItem(UK, DEFAULT_SYNC);
+        }
+        goToday();
+        checkSyncOnLoad();
+        pullFromSheet();
+      }
+
+      function ds(d) {
+        return (
+          d.getFullYear() +
+          "-" +
+          String(d.getMonth() + 1).padStart(2, "0") +
+          "-" +
+          String(d.getDate()).padStart(2, "0")
+        );
+      }
+      function pd(s) {
+        var p = s.split("-");
+        return new Date(+p[0], +p[1] - 1, +p[2]);
+      }
+      function goToday() {
+        curDS = ds(new Date());
+        updDate();
+        loadDay();
+        renderInput();
+      }
+      function chgDate(n) {
+        var d = pd(curDS);
+        d.setDate(d.getDate() + n);
+        curDS = ds(d);
+        updDate();
+        loadDay();
+        renderInput();
+      }
+      function updDate() {
+        var d = pd(curDS),
+          dw = ["日", "月", "火", "水", "木", "金", "土"][d.getDay()];
+        document.getElementById("curDate").textContent =
+          d.getMonth() + 1 + "月" + d.getDate() + "日（" + dw + "）";
+        document.getElementById("hdrDate").textContent =
+          new Date().toLocaleDateString("ja-JP", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            weekday: "long",
+          });
+      }
+
+      function loadDay() {
+        var d = allData[curDS] || {};
+        dayV = { memo: d.memo || "" };
+        items.forEach(function (it) {
+          if (it.type === "checkbox")
+            dayV[it.id] = { done: d[it.id] ? d[it.id].done || false : false };
+          else dayV[it.id] = d[it.id] || "";
+        });
+      }
+
+      function renderInput() {
+        var html = "";
+
+        // Sleep display
+        html += '<div class="sec"><div class="sec-b" style="padding-top:12px">';
+        html +=
+          '<div class="sleep-box"><div class="sleep-val" id="sleepDisp">--:--</div><div class="sleep-lbl">睡眠時間</div></div>';
+        html += "</div></div>";
+
+        // All items in one flat list
+        html +=
+          '<div class="sec' +
+          (editMode ? " edit-mode" : "") +
+          '"><div class="sec-h"><span>項目</span>';
+        html +=
+          '<button class="edit-toggle" onclick="toggleEdit()">' +
+          (editMode ? "完了" : "編集") +
+          "</button></div>";
+        html += '<div class="sec-b" id="itemList">';
+        items.forEach(function (it, i) {
+          if (it.type === "checkbox") {
+            html += renderChkRow(it, i);
+          } else {
+            html += renderField(it, i);
+          }
+        });
+        html += '<div class="add-btn" onclick="openEd(-1)">＋ 項目を追加</div>';
+        html += "</div></div>";
+
+        // Memo
+        html +=
+          '<div class="sec"><div class="sec-h"><span>メモ</span></div><div class="sec-b"><textarea class="memo" id="fMemo" rows="3" placeholder="今日の気づき..." oninput="autoSave()">' +
+          (dayV.memo || "") +
+          "</textarea></div></div>";
+
+        document.getElementById("inputArea").innerHTML = html;
+        calcSleep();
+        if (editMode) initDrag();
+      }
+
+      function renderField(it, idx) {
+        var v = dayV[it.id];
+        var disp = "タップで入力",
+          cls = "empty";
+        if (it.type === "time" && v) {
+          disp = v;
+          cls = "";
+        } else if (v && v !== 0 && v !== "") {
+          disp = v + (it.unit ? '<span class="u">' + it.unit + "</span>" : "");
+          cls = "";
+        }
+        var onclick =
+          it.type === "time"
+            ? "openTp('" + it.id + "','" + it.label + "')"
+            : "openNp('" +
+              it.id +
+              "','" +
+              it.label +
+              "','" +
+              it.unit +
+              "'," +
+              (it.type === "decimal" ? 1 : 0) +
+              ")";
+        var h = '<div class="row" data-idx="' + idx + '">';
+        if (editMode)
+          h +=
+            '<div class="drag-handle"><span></span><span></span><span></span></div>';
+        h +=
+          '<span class="row-icon">' +
+          it.icon +
+          '</span><div class="row-lbl">' +
+          it.label +
+          "</div>";
+        h +=
+          '<div class="row-val ' +
+          cls +
+          '" onclick="' +
+          onclick +
+          '">' +
+          disp +
+          "</div>";
+        if (editMode)
+          h +=
+            '<button class="row-del" onclick="event.stopPropagation();confirmDel(' +
+            idx +
+            ')">&times;</button>';
+        h += "</div>";
+        return h;
+      }
+
+      function renderChkRow(it, idx) {
+        var c = dayV[it.id] && dayV[it.id].done;
+        var h =
+          '<div class="chk-row" data-idx="' +
+          idx +
+          '" onclick="' +
+          (editMode ? "" : "togChk('" + it.id + "')") +
+          '">';
+        if (editMode)
+          h +=
+            '<div class="drag-handle"><span></span><span></span><span></span></div>';
+        h +=
+          '<div class="chk' +
+          (c ? " on" : "") +
+          '" id="c_' +
+          it.id +
+          '"></div>';
+        h +=
+          '<span class="chk-icon">' +
+          it.icon +
+          '</span><div class="chk-lbl">' +
+          it.label +
+          "</div>";
+        if (editMode)
+          h +=
+            '<button class="row-del" onclick="event.stopPropagation();confirmDel(' +
+            idx +
+            ')">&times;</button>';
+        h += "</div>";
+        return h;
+      }
+
+      function toggleEdit() {
+        editMode = !editMode;
+        renderInput();
+      }
+
+      // --- Delete with confirm ---
+      function confirmDel(idx) {
+        var bg = document.getElementById("cfmBg");
+        document.getElementById("cfmMsg").textContent =
+          "「" + items[idx].label + "」を削除しますか？";
+        bg.classList.add("open");
+        document.getElementById("cfmYes").onclick = function () {
+          items.splice(idx, 1);
+          localStorage.setItem(CK, JSON.stringify(items));
+          bg.classList.remove("open");
+          renderInput();
+        };
+        document.getElementById("cfmNo").onclick = function () {
+          bg.classList.remove("open");
+        };
+      }
+
+      // --- Drag & Drop (touch-based long-press) ---
+      var longPressTimer = null,
+        isDragging = false,
+        dragClone = null,
+        allRows = [];
+
+      function initDrag() {
+        var listEl = document.getElementById("itemList");
+        if (!listEl) return;
+        var rows = listEl.querySelectorAll(".row,.chk-row");
+        rows.forEach(function (row) {
+          row.addEventListener("touchstart", onDragTouchStart, {
+            passive: false,
+          });
+          row.addEventListener("touchmove", onDragTouchMove, {
+            passive: false,
+          });
+          row.addEventListener("touchend", onDragTouchEnd, { passive: false });
+        });
+      }
+
+      function onDragTouchStart(e) {
+        var row = e.currentTarget;
+        dragIdx = parseInt(row.getAttribute("data-idx"));
+        dragStartY = e.touches[0].clientY;
+        var rect = row.getBoundingClientRect();
+        dragOffsetY = dragStartY - rect.top;
+        longPressTimer = setTimeout(function () {
+          isDragging = true;
+          row.classList.add("dragging");
+          dragEl = row;
+          // Create floating clone
+          dragClone = row.cloneNode(true);
+          dragClone.style.cssText =
+            "position:fixed;left:" +
+            rect.left +
+            "px;top:" +
+            rect.top +
+            "px;width:" +
+            rect.width +
+            "px;z-index:500;opacity:.85;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.2);background:#fff;border-radius:10px;padding:0 14px;transition:none;";
+          document.body.appendChild(dragClone);
+          if (navigator.vibrate) navigator.vibrate(30);
+        }, 400);
+      }
+
+      function onDragTouchMove(e) {
+        if (!isDragging) {
+          // Cancel long press if moved too much
+          var dy = Math.abs(e.touches[0].clientY - dragStartY);
+          if (dy > 10) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+          }
+          return;
+        }
+        e.preventDefault();
+        var y = e.touches[0].clientY;
+        if (dragClone) dragClone.style.top = y - dragOffsetY + "px";
+
+        // Find which row we're over
+        var listEl = document.getElementById("itemList");
+        var rows = listEl.querySelectorAll(".row,.chk-row");
+        var newOverIdx = -1;
+        rows.forEach(function (r) {
+          var rect = r.getBoundingClientRect();
+          var mid = rect.top + rect.height / 2;
+          var idx = parseInt(r.getAttribute("data-idx"));
+          if (y > mid) newOverIdx = idx;
+        });
+        if (newOverIdx === -1) newOverIdx = 0;
+        if (newOverIdx !== dragOverIdx) {
+          dragOverIdx = newOverIdx;
+          // Visual feedback - highlight border
+          rows.forEach(function (r) {
+            r.style.borderTop = "";
+            r.style.borderBottom = "";
+          });
+          if (dragOverIdx >= dragIdx) {
+            var target = listEl.querySelector(
+              '[data-idx="' + dragOverIdx + '"]',
+            );
+            if (target) target.style.borderBottom = "3px solid var(--pri)";
+          } else {
+            var target = listEl.querySelector(
+              '[data-idx="' + dragOverIdx + '"]',
+            );
+            if (target) target.style.borderTop = "3px solid var(--pri)";
+          }
+        }
+      }
+
+      function onDragTouchEnd(e) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+        if (!isDragging) {
+          dragIdx = -1;
+          return;
+        }
+        isDragging = false;
+        if (dragEl) dragEl.classList.remove("dragging");
+        if (dragClone) {
+          document.body.removeChild(dragClone);
+          dragClone = null;
+        }
+
+        // Reorder items
+        if (dragIdx >= 0 && dragOverIdx >= 0 && dragIdx !== dragOverIdx) {
+          var item = items.splice(dragIdx, 1)[0];
+          var insertAt = dragOverIdx >= dragIdx ? dragOverIdx : dragOverIdx;
+          items.splice(insertAt, 0, item);
+          localStorage.setItem(CK, JSON.stringify(items));
+        }
+        dragIdx = -1;
+        dragOverIdx = -1;
+        dragEl = null;
+        renderInput();
+      }
+
+      function togChk(id) {
+        if (!dayV[id]) dayV[id] = { done: false };
+        dayV[id].done = !dayV[id].done;
+        renderInput();
+        autoSave();
+      }
+
+      function findSleepValue(labels) {
+        // Try direct ID first, then search by label
+        for (var i = 0; i < labels.length; i++) {
+          if (dayV[labels[i]]) return dayV[labels[i]];
+        }
+        // Search items by label pattern
+        var its = JSON.parse(localStorage.getItem(CK) || "[]");
+        if (!its.length) its = items;
+        for (var i = 0; i < labels.length; i++) {
+          for (var j = 0; j < its.length; j++) {
+            if (
+              its[j].label &&
+              its[j].label.indexOf(labels[i]) >= 0 &&
+              its[j].type === "time"
+            ) {
+              if (dayV[its[j].id]) return dayV[its[j].id];
+            }
+          }
+        }
+        return null;
+      }
+      function calcSleep() {
+        var s = findSleepValue(["sleepStart", "就寝"]),
+          e = findSleepValue(["sleepEnd", "起床"]),
+          el = document.getElementById("sleepDisp");
+        if (!el) return;
+        if (!s || !e) {
+          el.textContent = "--:--";
+          return;
+        }
+        var sm = parseInt(s.split(":")[0]) * 60 + parseInt(s.split(":")[1]),
+          em = parseInt(e.split(":")[0]) * 60 + parseInt(e.split(":")[1]);
+        if (em <= sm) em += 1440;
+        var df = em - sm;
+        el.textContent =
+          Math.floor(df / 60) + "時間" + (df % 60 > 0 ? (df % 60) + "分" : "");
+      }
+
+      // --- Numpad ---
+      function openNp(id, ttl, unit, dec) {
+        if (editMode) return;
+        npField = id;
+        npDec = dec;
+        var it = items.find(function (i) {
+          return i.id === id;
+        });
+        var isCum = it && it.type === "cumulative";
+        npBuf = "";
+        document.getElementById("npTtl").textContent = isCum
+          ? ttl + "（+加算）"
+          : ttl;
+        document.getElementById("npU").textContent = unit;
+        var cur = dayV[id] ? parseFloat(dayV[id]) : 0;
+        document.getElementById("npVal").textContent = isCum ? "+0" : "0";
+        if (!isCum && dayV[id]) {
+          npBuf = String(dayV[id]);
+          document.getElementById("npVal").textContent = npBuf;
+        }
+        document.getElementById("npDot").style.display = dec ? "" : "none";
+        document.getElementById("npBg").classList.add("open");
+        if (isCum) {
+          npIsCum = true;
+          npCumBase = cur;
+        } else {
+          npIsCum = false;
+          npCumBase = 0;
+        }
+      }
+      function closeNp() {
+        document.getElementById("npBg").classList.remove("open");
+      }
+      function npIn(c) {
+        if (c === "." && npBuf.includes(".")) return;
+        if (c === "." && !npBuf) npBuf = "0";
+        if (npDec && npBuf.includes(".") && npBuf.split(".")[1].length >= npDec)
+          return;
+        npBuf += c;
+        document.getElementById("npVal").textContent = npIsCum
+          ? "+" + (npBuf || "0")
+          : npBuf;
+      }
+      function npDel() {
+        npBuf = npBuf.slice(0, -1);
+        document.getElementById("npVal").textContent = npIsCum
+          ? "+" + (npBuf || "0")
+          : npBuf || "0";
+      }
+      function npClr() {
+        npBuf = "";
+        document.getElementById("npVal").textContent = npIsCum ? "+0" : "0";
+      }
+      function npOk() {
+        var v = parseFloat(npBuf) || 0;
+        var it = items.find(function (i) {
+          return i.id === npField;
+        });
+        if (it && it.type === "cumulative" && v !== 0) {
+          dayV[npField] = (parseFloat(dayV[npField]) || 0) + v;
+        } else {
+          dayV[npField] = v;
+        }
+        closeNp();
+        renderInput();
+        autoSave();
+      }
+
+      // --- Time numpad ---
+      function openTp(id, ttl) {
+        if (editMode) return;
+        tpField = id;
+        tpBuf = "";
+        if (dayV[id]) tpBuf = dayV[id].replace(":", "");
+        document.getElementById("tpTtl").textContent = ttl;
+        updTpDisp();
+        document.getElementById("tpBg").classList.add("open");
+      }
+      function closeTp() {
+        document.getElementById("tpBg").classList.remove("open");
+      }
+      function tpIn(c) {
+        if (c === "00") {
+          tpBuf += "00";
+        } else {
+          tpBuf += c;
+        }
+        if (tpBuf.length > 4) tpBuf = tpBuf.slice(-4);
+        updTpDisp();
+      }
+      function tpDel() {
+        tpBuf = tpBuf.slice(0, -1);
+        updTpDisp();
+      }
+      function tpClr() {
+        tpBuf = "";
+        updTpDisp();
+      }
+      function updTpDisp() {
+        var p = tpBuf.padStart(4, "0");
+        document.getElementById("tpDisp").innerHTML =
+          "<span>" +
+          p[0] +
+          "</span><span>" +
+          p[1] +
+          '</span><span class="colon">:</span><span>' +
+          p[2] +
+          "</span><span>" +
+          p[3] +
+          "</span>";
+      }
+      function tpOk() {
+        if (!tpBuf) {
+          dayV[tpField] = "";
+          closeTp();
+          renderInput();
+          autoSave();
+          return;
+        }
+        var p = tpBuf.padStart(4, "0");
+        var h = parseInt(p.substring(0, 2)),
+          m = parseInt(p.substring(2, 4));
+        if (h > 23) h = 23;
+        if (m > 59) m = m >= 30 ? 30 : 0;
+        else m = m >= 15 ? 30 : 0;
+        dayV[tpField] =
+          String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+        closeTp();
+        renderInput();
+        autoSave();
+      }
+
+      // --- Auto Save ---
+      var _saveTimer = null,
+        _toastTimer = null;
+      function autoSave() {
+        clearTimeout(_saveTimer);
+        _saveTimer = setTimeout(function () {
+          var memoEl = document.getElementById("fMemo");
+          if (memoEl) dayV.memo = memoEl.value;
+          dayV.date = curDS;
+          dayV.savedAt = new Date().toISOString();
+          allData[curDS] = Object.assign({}, dayV);
+          localStorage.setItem(SK, JSON.stringify(allData));
+          syncToSheet();
+          showAutoSaved();
+        }, 400);
+      }
+      function showAutoSaved() {
+        var el = document.getElementById("autoSaved");
+        el.classList.add("show");
+        clearTimeout(_toastTimer);
+        _toastTimer = setTimeout(function () {
+          el.classList.remove("show");
+        }, 1500);
+      }
+      function toast(m) {
+        var t = document.createElement("div");
+        t.textContent = m;
+        t.style.cssText =
+          "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.8);color:#fff;padding:14px 28px;border-radius:14px;font-size:15px;font-weight:600;z-index:999;pointer-events:none";
+        document.body.appendChild(t);
+        setTimeout(function () {
+          t.style.transition = "opacity .3s";
+          t.style.opacity = "0";
+          setTimeout(function () {
+            t.remove();
+          }, 300);
+        }, 1200);
+      }
+
+      // --- Views ---
+      function showV(v) {
+        ["in", "ch", "hi", "st"].forEach(function (x) {
+          document.getElementById("v-" + x).classList.toggle("on", x === v);
+          document.getElementById("t-" + x).classList.toggle("on", x === v);
+        });
+        if (v === "ch") renderCharts();
+        if (v === "hi") renderHist();
+        if (v === "st") renderSettings();
+      }
+
+      // --- Charts ---
+      function l30() {
+        var d = [];
+        var n = new Date();
+        for (var i = 29; i >= 0; i--) {
+          var x = new Date(n);
+          x.setDate(x.getDate() - i);
+          d.push(ds(x));
+        }
+        return d;
+      }
+      function slpH(d) {
+        if (!d || !d.sleepStart || !d.sleepEnd) return null;
+        var s =
+            parseInt(d.sleepStart.split(":")[0]) * 60 +
+            parseInt(d.sleepStart.split(":")[1]),
+          e =
+            parseInt(d.sleepEnd.split(":")[0]) * 60 +
+            parseInt(d.sleepEnd.split(":")[1]);
+        if (e <= s) e += 1440;
+        return (e - s) / 60;
+      }
+      function rtRate(d) {
+        if (!d) return null;
+        var chks = items.filter(function (i) {
+          return i.type === "checkbox";
+        });
+        if (!chks.length) return null;
+        var done = chks.filter(function (i) {
+          return d[i.id] && d[i.id].done;
+        }).length;
+        return (done / chks.length) * 100;
+      }
+      function drawC(cId, sId, days, vals, unit, color) {
+        var cv = document.getElementById(cId),
+          ctx = cv.getContext("2d"),
+          w = (cv.width = cv.parentElement.clientWidth),
+          h = (cv.height = 160);
+        ctx.clearRect(0, 0, w, h);
+        var fv = vals.filter(function (v) {
+          return v !== null && v !== 0;
+        });
+        if (!fv.length) {
+          ctx.fillStyle = "#999";
+          ctx.font = "13px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("データがありません", w / 2, h / 2);
+          document.getElementById(sId).innerHTML = "";
+          return;
+        }
+        var P = { t: 18, r: 12, b: 24, l: 46 },
+          cw = w - P.l - P.r,
+          ch = h - P.t - P.b;
+        var mn = Math.min.apply(null, fv) * 0.95,
+          mx = Math.max.apply(null, fv) * 1.05,
+          rng = mx - mn || 1;
+        ctx.strokeStyle = "#e5e5ea";
+        ctx.lineWidth = 1;
+        for (var i = 0; i <= 4; i++) {
+          var y = P.t + ch - (ch * i) / 4;
+          ctx.beginPath();
+          ctx.moveTo(P.l, y);
+          ctx.lineTo(w - P.r, y);
+          ctx.stroke();
+          ctx.fillStyle = "#999";
+          ctx.font = "10px sans-serif";
+          ctx.textAlign = "right";
+          ctx.fillText(
+            (mn + (rng * i) / 4).toFixed(unit === "歩" ? 0 : 1),
+            P.l - 4,
+            y + 3,
+          );
+        }
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2.5;
+        ctx.lineJoin = "round";
+        var st = false;
+        days.forEach(function (d, i) {
+          var v = vals[i];
+          if (v === null || v === 0) return;
+          var x = P.l + (cw * i) / (days.length - 1),
+            y = P.t + ch - ((v - mn) / rng) * ch;
+          if (!st) {
+            ctx.moveTo(x, y);
+            st = true;
+          } else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        var avg =
+          fv.reduce(function (a, b) {
+            return a + b;
+          }, 0) / fv.length;
+        document.getElementById(sId).innerHTML =
+          "<div>平均:<span>" +
+          avg.toFixed(1) +
+          unit +
+          "</span></div><div>最高:<span>" +
+          Math.max.apply(null, fv).toFixed(1) +
+          unit +
+          "</span></div><div>最低:<span>" +
+          Math.min.apply(null, fv).toFixed(1) +
+          unit +
+          "</span></div><div>記録:<span>" +
+          fv.length +
+          "日</span></div>";
+      }
+      function renderCharts() {
+        var days = l30();
+        var html = "";
+        html +=
+          '<div class="chart-c"><div class="chart-t">体重（30日）</div><canvas id="cW" height="160"></canvas><div class="chart-s" id="sW"></div></div>';
+        html +=
+          '<div class="chart-c"><div class="chart-t">睡眠時間（30日）</div><canvas id="cS" height="160"></canvas><div class="chart-s" id="sS"></div></div>';
+        html +=
+          '<div class="chart-c"><div class="chart-t">歩数（30日）</div><canvas id="cSt" height="160"></canvas><div class="chart-s" id="sSt"></div></div>';
+        html +=
+          '<div class="chart-c"><div class="chart-t">ルーチン達成率（30日）</div><canvas id="cR" height="160"></canvas><div class="chart-s" id="sR"></div></div>';
+        html +=
+          '<div class="chart-c"><div class="chart-t">水分摂取量（30日）</div><canvas id="cWa" height="160"></canvas><div class="chart-s" id="sWa"></div></div>';
+        document.getElementById("chartArea").innerHTML = html;
+        setTimeout(function () {
+          drawC(
+            "cW",
+            "sW",
+            days,
+            days.map(function (d) {
+              return allData[d] ? allData[d].weight : null;
+            }),
+            "kg",
+            "#2ec4a0",
+          );
+          drawC(
+            "cS",
+            "sS",
+            days,
+            days.map(function (d) {
+              return slpH(allData[d]);
+            }),
+            "h",
+            "#af52de",
+          );
+          drawC(
+            "cSt",
+            "sSt",
+            days,
+            days.map(function (d) {
+              return allData[d] ? allData[d].steps : null;
+            }),
+            "歩",
+            "#34c759",
+          );
+          drawC(
+            "cR",
+            "sR",
+            days,
+            days.map(function (d) {
+              return rtRate(allData[d]);
+            }),
+            "%",
+            "#ff9500",
+          );
+          drawC(
+            "cWa",
+            "sWa",
+            days,
+            days.map(function (d) {
+              return allData[d] ? allData[d].water : null;
+            }),
+            "ml",
+            "#007aff",
+          );
+        }, 50);
+      }
+
+      // --- History ---
+      function renderHist() {
+        var dates = Object.keys(allData).sort().reverse().slice(0, 30);
+        if (!dates.length) {
+          document.getElementById("histList").innerHTML =
+            '<div class="empty-m">記録がありません</div>';
+          return;
+        }
+        document.getElementById("histList").innerHTML = dates
+          .map(function (d) {
+            var v = allData[d],
+              dd = pd(d),
+              dw = ["日", "月", "火", "水", "木", "金", "土"][dd.getDay()];
+            var sl = slpH(v),
+              chks = items.filter(function (i) {
+                return i.type === "checkbox";
+              }),
+              dn = chks.filter(function (i) {
+                return v[i.id] && v[i.id].done;
+              }).length;
+            var p = [];
+            if (sl) p.push("睡眠" + sl.toFixed(1) + "h");
+            if (v.weight) p.push(v.weight + "kg");
+            if (v.steps) p.push(v.steps.toLocaleString() + "歩");
+            if (v.water) p.push("水" + v.water + "ml");
+            return (
+              '<div class="hist-row" onclick="curDS=\'' +
+              d +
+              "';updDate();loadDay();renderInput();showV('in')\"><div class=\"hist-d\">" +
+              (dd.getMonth() + 1) +
+              "/" +
+              dd.getDate() +
+              "(" +
+              dw +
+              ')</div><div class="hist-v">' +
+              p.join(" · ") +
+              "</div></div>"
+            );
+          })
+          .join("");
+      }
+
+      // --- Settings ---
+      function renderSettings() {
+        var html = "";
+        html +=
+          '<div class="sec"><div class="sec-h">項目管理</div><div class="sec-b">';
+        items.forEach(function (it, i) {
+          html +=
+            '<div class="row" onclick="openEd(' +
+            i +
+            ')"><span class="row-icon">' +
+            it.icon +
+            '</span><div class="row-lbl">' +
+            it.label +
+            '</div><div style="font-size:11px;color:var(--txt2)">' +
+            {
+              integer: "自然数",
+              decimal: "小数",
+              cumulative: "累積",
+              checkbox: "チェック",
+              time: "時刻",
+            }[it.type] +
+            (it.unit ? " / " + it.unit : "") +
+            "</div></div>";
+        });
+        html +=
+          '<div class="add-btn" onclick="openEd(-1)">＋ 項目を追加</div></div></div>';
+        html +=
+          '<div class="sec"><div class="sec-h">Google Sheets</div><div class="sec-b"><div class="s-field"><label>Web App URL</label><input type="text" id="syncIn" value="' +
+          syncUrl +
+          '" placeholder="https://script.google.com/..."></div><div class="s-btns"><button class="b-pri" onclick="syncUrl=document.getElementById(\'syncIn\').value.trim();localStorage.setItem(UK,syncUrl);toast(\'保存しました\')">保存</button><button class="b-sec" onclick="testSync()">テスト</button></div></div></div>';
+        html +=
+          '<div class="sec"><div class="sec-h">データ</div><div class="sec-b"><div style="font-size:13px;color:var(--txt2);margin-bottom:8px">記録日数：' +
+          Object.keys(allData).length +
+          '日</div><div class="s-btns"><button class="b-sec" onclick="exportCSV()">CSV出力</button><button class="b-sec" style="color:var(--red)" onclick="if(confirm(\'全データを削除？\')&&confirm(\'本当に？\')){allData={};localStorage.removeItem(SK);loadDay();renderInput();toast(\'削除しました\')}">全削除</button></div></div></div>';
+        document.getElementById("settingsArea").innerHTML = html;
+      }
+
+      // --- Item editor ---
+      function openEd(idx) {
+        edIdx = idx;
+        document.getElementById("edTitle").textContent =
+          idx >= 0 ? "項目を編集" : "項目を追加";
+        var ig = "";
+        ICONS.forEach(function (ic) {
+          ig +=
+            '<div class="icon-opt" onclick="selIcon(this,\'' +
+            ic +
+            "')\">" +
+            ic +
+            "</div>";
+        });
+        document.getElementById("iconGrid").innerHTML = ig;
+        if (idx >= 0) {
+          var it = items[idx];
+          edIcon = it.icon;
+          document.getElementById("edName").value = it.label;
+          document.getElementById("edType").value = it.type;
+          document.getElementById("edUnit").value = it.unit;
+          document.querySelectorAll(".icon-opt").forEach(function (el) {
+            if (el.textContent === it.icon) el.classList.add("sel");
+          });
+        } else {
+          edIcon = ICONS[0];
+          document.getElementById("edName").value = "";
+          document.getElementById("edType").value = "integer";
+          document.getElementById("edUnit").value = "";
+          document.querySelector(".icon-opt").classList.add("sel");
+        }
+        updEdUnit();
+        document.getElementById("edType").onchange = updEdUnit;
+        document.getElementById("edBg").classList.add("open");
+      }
+      function closeEd() {
+        document.getElementById("edBg").classList.remove("open");
+      }
+      function selIcon(el, ic) {
+        document.querySelectorAll(".icon-opt").forEach(function (e) {
+          e.classList.remove("sel");
+        });
+        el.classList.add("sel");
+        edIcon = ic;
+      }
+      function updEdUnit() {
+        var t = document.getElementById("edType").value;
+        document.getElementById("edUnitField").style.display =
+          t === "checkbox" || t === "time" ? "none" : "";
+      }
+      function saveItem() {
+        var name = document.getElementById("edName").value.trim();
+        if (!name) {
+          toast("項目名を入力してください");
+          return;
+        }
+        var obj = {
+          id: edIdx >= 0 ? items[edIdx].id : "custom_" + Date.now(),
+          label: name,
+          icon: edIcon,
+          type: document.getElementById("edType").value,
+          unit: document.getElementById("edUnit").value.trim(),
+        };
+        if (edIdx >= 0) items[edIdx] = obj;
+        else items.push(obj);
+        localStorage.setItem(CK, JSON.stringify(items));
+        closeEd();
+        renderInput();
+        if (document.getElementById("v-st").classList.contains("on"))
+          renderSettings();
+      }
+
+      // --- Sync ---
+      function setSyncState(state) {
+        var dot = document.getElementById("syncDot");
+        dot.classList.remove("ok", "syncing");
+        if (state) dot.classList.add(state);
+        // Show/hide sync warning
+        var warn = document.getElementById("syncWarn");
+        if (state === "ok") warn.classList.remove("show");
+        else if (!syncUrl) warn.classList.add("show");
+      }
+      function checkSyncOnLoad() {
+        if (!syncUrl) {
+          document.getElementById("syncWarn").classList.add("show");
+        }
+      }
+      function pullFromSheet() {
+        if (!syncUrl) {
+          setSyncState("");
+          return;
+        }
+        setSyncState("syncing");
+        var cbName = "_llcb_" + Date.now();
+        var script = document.createElement("script");
+        var done = false;
+        window[cbName] = function (res) {
+          done = true;
+          try {
+            document.head.removeChild(script);
+          } catch (e) {}
+          delete window[cbName];
+          if (!res || !res.success) {
+            setSyncState("");
+            return;
+          }
+          var remote = res.data || {};
+          var merged = false;
+          Object.keys(remote).forEach(function (date) {
+            var r = remote[date],
+              l = allData[date];
+            if (!l) {
+              allData[date] = r;
+              merged = true;
+            } else {
+              var rTime = r.savedAt ? new Date(r.savedAt).getTime() : 0;
+              var lTime = l.savedAt ? new Date(l.savedAt).getTime() : 0;
+              if (rTime > lTime) {
+                allData[date] = r;
+                merged = true;
+              }
+            }
+          });
+          if (merged) {
+            localStorage.setItem(SK, JSON.stringify(allData));
+            loadDay();
+            renderInput();
+            toast("クラウドから復元しました");
+          }
+          setSyncState("ok");
+        };
+        script.src = syncUrl + "?callback=" + cbName;
+        script.onerror = function () {
+          done = true;
+          setSyncState("");
+          delete window[cbName];
+        };
+        document.head.appendChild(script);
+        setTimeout(function () {
+          if (!done) {
+            setSyncState("");
+            delete window[cbName];
+            try {
+              document.head.removeChild(script);
+            } catch (e) {}
+          }
+        }, 10000);
+      }
+      function syncToSheet() {
+        if (!syncUrl) return;
+        setSyncState("syncing");
+        var ifr = document.createElement("iframe");
+        ifr.name = "sf_" + Date.now();
+        ifr.style.display = "none";
+        document.body.appendChild(ifr);
+        var fm = document.createElement("form");
+        fm.method = "POST";
+        fm.action = syncUrl;
+        fm.target = ifr.name;
+        fm.style.display = "none";
+        var inp = document.createElement("textarea");
+        inp.name = "data";
+        inp.value = JSON.stringify(allData);
+        fm.appendChild(inp);
+        document.body.appendChild(fm);
+        fm.submit();
+        setTimeout(function () {
+          try {
+            document.body.removeChild(ifr);
+          } catch (e) {}
+          try {
+            document.body.removeChild(fm);
+          } catch (e) {}
+          setSyncState("ok");
+        }, 4000);
+      }
+      function testSync() {
+        if (!syncUrl) {
+          toast("URLを入力");
+          return;
+        }
+        pullFromSheet();
+      }
+      function exportCSV() {
+        var dates = Object.keys(allData).sort();
+        if (!dates.length) {
+          toast("データなし");
+          return;
+        }
+        var numItems = items.filter(function (i) {
+          return i.type !== "checkbox";
+        });
+        var chkItems = items.filter(function (i) {
+          return i.type === "checkbox";
+        });
+        var hdr = ["日付"]
+          .concat(
+            numItems.map(function (i) {
+              return i.label;
+            }),
+          )
+          .concat(
+            chkItems.map(function (i) {
+              return i.label;
+            }),
+          )
+          .concat(["メモ"]);
+        var rows = [hdr.join(",")];
+        dates.forEach(function (d) {
+          var v = allData[d];
+          var c = [d]
+            .concat(
+              numItems.map(function (i) {
+                return v[i.id] || "";
+              }),
+            )
+            .concat(
+              chkItems.map(function (i) {
+                return v[i.id] && v[i.id].done ? "1" : "0";
+              }),
+            )
+            .concat(['"' + (v.memo || "").replace(/"/g, '""') + '"']);
+          rows.push(c.join(","));
+        });
+        var blob = new Blob(["\uFEFF" + rows.join("\n")], { type: "text/csv" });
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "life-logger_" + ds(new Date()) + ".csv";
+        a.click();
+      }
+
+      init();
+    </script>
+  </body>
 </html>
