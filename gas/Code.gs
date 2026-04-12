@@ -2,16 +2,21 @@
  * 暮らしの記録 - Google Apps Script 同期API
  * GitHub Pages のアプリからデータを受け取り、Google Sheets に保存する
  *
- * セットアップ:
- *   1. setupSheet() を実行してシートを初期化
- *   2. ウェブアプリとしてデプロイ（全員がアクセス可能に設定）
+ * ※このファイルはGitHub上の記録用。実際のGASはclasp管理のスタンドアロンプロジェクト。
+ * clasp project: /tmp/claude/life-logger-gas/.clasp.json
+ * script ID: 1P24erqoDPsLlTNArsF8qajNiPtv-Ze5zFdpGX_cJ_tP6BOVTEdWejB7w
  */
 
-const SHEET_NAME = "LifeLog";
+const SPREADSHEET_ID = "1Z3KD6O3Uv47bTQ8bj-TM1KHxACrwWqGyvBzhkgUURT8";
+const SHEET_NAME = "暮らしの記録 - LifeLog";
 const ROUTINES = ["meditation","taskCheck","emailCheck","calendarCheck","stretch","supplement","housework","wifeContribution"];
 const BASE_HEADERS = ["date","sleepStart","sleepEnd","sleepHours","nap","lastMeal","water","weight","bodyFat","calories","steps","tabelogFollowers","tabelogReactions","instaFollowers"];
 const ROUTINE_HEADERS = ROUTINES.map(r => "routine_" + r);
 const ALL_HEADERS = [...BASE_HEADERS, ...ROUTINE_HEADERS, "memo", "savedAt"];
+
+function getSpreadsheet() {
+  return SpreadsheetApp.openById(SPREADSHEET_ID);
+}
 
 function doGet(e) {
   try {
@@ -43,7 +48,6 @@ function doPost(e) {
       throw new Error("データが空です");
     }
 
-    // ヘルスケアデータの場合は専用処理にルーティング
     if (payload.source === "health") {
       const result = mergeHealthData(payload);
       return ContentService
@@ -68,7 +72,7 @@ function doPost(e) {
 }
 
 function setupSheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   let sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) sheet = ss.insertSheet(SHEET_NAME);
 
@@ -83,7 +87,7 @@ function setupSheet() {
 }
 
 function getData() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) return {};
 
@@ -117,18 +121,27 @@ function getData() {
 }
 
 function writeData(allData) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   let sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) { setupSheet(); sheet = ss.getSheetByName(SHEET_NAME); }
 
+  // 既存データを読み込み、送信データとマージ（upsert方式）
+  const existingData = getData();
+  const incomingDates = Object.keys(allData);
+  if (incomingDates.length === 0) return;
+
+  // 既存データに送信データをマージ（同一日付は上書き、新規日付は追加）
+  incomingDates.forEach(date => {
+    existingData[date] = allData[date];
+  });
+
+  // マージ後の全データを書き込み
+  const allDates = Object.keys(existingData).sort();
   const lastRow = sheet.getLastRow();
   if (lastRow > 1) sheet.getRange(2, 1, lastRow - 1, ALL_HEADERS.length).clearContent();
 
-  const dates = Object.keys(allData).sort();
-  if (dates.length === 0) return;
-
-  const rows = dates.map(date => {
-    const d = allData[date];
+  const rows = allDates.map(date => {
+    const d = existingData[date];
     const sleepH = calcSleepHours(d.sleepStart, d.sleepEnd);
     const row = [
       date, d.sleepStart || "", d.sleepEnd || "", sleepH,
@@ -155,28 +168,16 @@ function calcSleepHours(start, end) {
   return ((e - s) / 60).toFixed(1);
 }
 
-/**
- * Apple ヘルスケア連動 API
- * iOSショートカットから体重・体脂肪・歩数・消費カロリーを受け取り、
- * 当日のデータに自動マージする
- *
- * POST body (JSON):
- *   { "source": "health", "date": "2026-04-04", "weight": 75.2, "bodyFat": 22.1, "steps": 8432, "calories": 520 }
- *
- * doPost() で source==="health" の場合にこの関数へルーティングする
- */
 function mergeHealthData(payload) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   let sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) { setupSheet(); sheet = ss.getSheetByName(SHEET_NAME); }
 
   const dateStr = payload.date || Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy-MM-dd");
 
-  // 既存データを読み込み
   const allData = getData();
   const existing = allData[dateStr] || {};
 
-  // ヘルスケアデータをマージ（値がある項目のみ上書き）
   if (payload.weight !== undefined && payload.weight !== null) existing.weight = payload.weight;
   if (payload.bodyFat !== undefined && payload.bodyFat !== null) existing.bodyFat = payload.bodyFat;
   if (payload.steps !== undefined && payload.steps !== null) existing.steps = payload.steps;
