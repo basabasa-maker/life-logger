@@ -7,7 +7,7 @@
       content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
     />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <title>暮らしの記録</title>
+    <title>習慣ログ</title>
     <meta
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
@@ -128,10 +128,12 @@
         background: rgba(255, 255, 255, 0.4);
       }
       .date-nav .cur {
-        font-size: 16px;
-        font-weight: 600;
-        min-width: 140px;
+        font-size: 20px;
+        font-weight: 700;
+        min-width: 160px;
         text-align: center;
+        letter-spacing: 0.5px;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
       }
       .date-nav .today {
         font-size: 11px;
@@ -276,21 +278,26 @@
       }
 
       .sleep-box {
-        background: linear-gradient(135deg, var(--pri-lt), #d4f5ec);
-        border-radius: 12px;
-        padding: 12px;
-        text-align: center;
-        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        padding: 11px 0;
+        min-height: 46px;
       }
       .sleep-val {
-        font-size: 28px;
-        font-weight: 700;
+        padding: 7px 12px;
+        background: var(--pri-lt);
+        border-radius: 10px;
+        min-width: 80px;
+        text-align: center;
+        font-size: 15px;
+        font-weight: 600;
         color: var(--pri-dk);
       }
       .sleep-lbl {
-        font-size: 11px;
-        color: var(--txt2);
-        margin-top: 2px;
+        flex: 1;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--txt);
       }
 
       .chk-row {
@@ -819,7 +826,7 @@
     <div class="hdr">
       <div class="hdr-top">
         <div>
-          <h1>暮らしの記録</h1>
+          <h1>習慣ログ</h1>
           <div class="hdr-sub" id="hdrDate"></div>
         </div>
         <div class="hdr-r">
@@ -1279,10 +1286,11 @@
       function renderInput() {
         var html = "";
 
-        // Sleep display
-        html += '<div class="sec"><div class="sec-b" style="padding-top:12px">';
+        // Sleep display (inline with other items)
         html +=
-          '<div class="sleep-box"><div class="sleep-val" id="sleepDisp">--:--</div><div class="sleep-lbl">睡眠時間</div></div>';
+          '<div class="sec"><div class="sec-h"><span>睡眠</span></div><div class="sec-b">';
+        html +=
+          '<div class="sleep-box"><span class="row-icon">🌙</span><div class="sleep-lbl">睡眠時間</div><div class="sleep-val" id="sleepDisp">--:--</div></div>';
         html += "</div></div>";
 
         // All items in one flat list
