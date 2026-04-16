@@ -155,7 +155,10 @@ function writeData(allData) {
       d.tabelogFollowers || 0, d.tabelogReactions || 0, d.instaFollowers || 0
     ];
     ROUTINES.forEach(r => {
-      row.push(d.routines && d.routines[r] && d.routines[r].done ? "TRUE" : "FALSE");
+      // Support both formats: d.routines.r.done (GAS format) and d.r.done (frontend format)
+      const fromRoutines = d.routines && d.routines[r] && d.routines[r].done;
+      const fromDirect = d[r] && d[r].done;
+      row.push(fromRoutines || fromDirect ? "TRUE" : "FALSE");
     });
     row.push(d.memo || "");
     row.push(d.savedAt || new Date().toISOString());

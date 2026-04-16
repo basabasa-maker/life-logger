@@ -2153,6 +2153,13 @@
               timeFields.forEach(function (f) {
                 if (r[f]) r[f] = fixTime(r[f]);
               });
+              // Unwrap routines object to flat format (GAS returns {routines: {meditation: {done:true}}}, frontend expects {meditation: {done:true}})
+              if (r.routines) {
+                Object.keys(r.routines).forEach(function (k) {
+                  if (!r[k]) r[k] = r.routines[k];
+                });
+                delete r.routines;
+              }
               // Remove GAS-generated fields not used by frontend
               delete r.date;
               delete r.sleepHours;
