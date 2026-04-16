@@ -2134,6 +2134,30 @@
             }
             var remote = res.data || {};
             var merged = false;
+            // Convert "1899-12-30T..." time strings to "HH:mm"
+            function fixTime(v) {
+              if (typeof v === "string" && v.indexOf("1899-12-30") === 0) {
+                var t = new Date(v);
+                if (!isNaN(t.getTime())) {
+                  return (
+                    String(t.getUTCHours()).padStart(2, "0") +
+                    ":" +
+                    String(t.getUTCMinutes()).padStart(2, "0")
+                  );
+                }
+              }
+              return v;
+            }
+            function fixEntry(r) {
+              var timeFields = ["sleepStart", "sleepEnd", "lastMeal"];
+              timeFields.forEach(function (f) {
+                if (r[f]) r[f] = fixTime(r[f]);
+              });
+              // Remove GAS-generated fields not used by frontend
+              delete r.date;
+              delete r.sleepHours;
+              return r;
+            }
             Object.keys(remote).forEach(function (rawDate) {
               // Normalize date key to yyyy-MM-dd
               var date = rawDate;
@@ -2141,7 +2165,7 @@
                 var d = new Date(rawDate);
                 if (!isNaN(d.getTime())) date = ds(d);
               }
-              var r = remote[rawDate],
+              var r = fixEntry(remote[rawDate]),
                 l = allData[date];
               if (!l) {
                 allData[date] = r;
