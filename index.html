@@ -2134,8 +2134,14 @@
             }
             var remote = res.data || {};
             var merged = false;
-            Object.keys(remote).forEach(function (date) {
-              var r = remote[date],
+            Object.keys(remote).forEach(function (rawDate) {
+              // Normalize date key to yyyy-MM-dd
+              var date = rawDate;
+              if (rawDate.length > 10) {
+                var d = new Date(rawDate);
+                if (!isNaN(d.getTime())) date = ds(d);
+              }
+              var r = remote[rawDate],
                 l = allData[date];
               if (!l) {
                 allData[date] = r;

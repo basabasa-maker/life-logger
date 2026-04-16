@@ -101,7 +101,12 @@ function getData() {
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     if (!row[0]) continue;
-    const dateStr = String(row[0]);
+    let dateStr = row[0];
+    if (dateStr instanceof Date) {
+      dateStr = Utilities.formatDate(dateStr, "Asia/Tokyo", "yyyy-MM-dd");
+    } else {
+      dateStr = String(dateStr);
+    }
     const entry = {};
 
     headers.forEach((h, j) => {
